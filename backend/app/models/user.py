@@ -2,7 +2,6 @@ import uuid
 import enum
 from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
 from .base import BaseModel
 
 class RoleEnum(str, enum.Enum):
@@ -20,4 +19,4 @@ class User(BaseModel):
     phone: Mapped[str] = mapped_column(String)
     role: Mapped[RoleEnum] = mapped_column()
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    ward_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("wards.id"), nullable=True)
+    ward_id: Mapped[str | None] = mapped_column(ForeignKey("wards.id"), nullable=True)

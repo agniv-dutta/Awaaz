@@ -75,7 +75,7 @@ async def compute_match_score(volunteer: Volunteer, need: Need, requested_time: 
     return round(score, 4)
 
 async def get_top_matches(db: AsyncSession, need_id: uuid.UUID, n: int = 5) -> list[tuple[Volunteer, float]]:
-    need_result = await db.execute(select(Need).where(Need.id == need_id))
+    need_result = await db.execute(select(Need).where(Need.id == str(need_id)))
     need = need_result.scalar_one_or_none()
     
     if not need:
@@ -86,7 +86,7 @@ async def get_top_matches(db: AsyncSession, need_id: uuid.UUID, n: int = 5) -> l
     # Exclude volunteers who already declined this exact need
     declined_result = await db.execute(
         select(Dispatch.volunteer_id)
-        .where(Dispatch.need_id == need_id, Dispatch.status == DispatchStatus.DECLINED)
+        .where(Dispatch.need_id == str(need_id), Dispatch.status == DispatchStatus.DECLINED)
     )
     declined_volunteer_ids = set(declined_result.scalars().all())
 
@@ -109,21 +109,4 @@ async def get_top_matches(db: AsyncSession, need_id: uuid.UUID, n: int = 5) -> l
     
     top_matches = scored_volunteers[:n]
     
-    # Create Dispatch rows in PENDING_ACCEPT and notify
-    from app.tasks.dispatch_reminder import notify_volunteer
-    for match, score in top_matches:
-        dispatch = Dispatch(
-            need_id=need_id,
-            volunteer_id=match.id,
-            match_score=score,
-            status=DispatchStatus.PENDING_ACCEPT,
-            notified_at=datetime.now(timezone.utc)
-        )
-        db.add(dispatch)
-        await db.commit()
-        await db.refresh(dispatch)
-        
-        # Enqueue the background notification task
-        notify_volunteer.delay(str(dispatch.id))
-        
     return top_matches

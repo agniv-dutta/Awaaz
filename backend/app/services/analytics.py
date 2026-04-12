@@ -12,9 +12,10 @@ async def get_analytics_summary(db: AsyncSession, ward_id: uuid.UUID | None = No
     dispatches_query = select(Dispatch).filter(Dispatch.status == DispatchStatus.COMPLETED)
 
     if ward_id:
-        needs_query = needs_query.filter(Need.ward_id == ward_id)
-        volunteers_query = volunteers_query.filter(Volunteer.home_ward_id == ward_id)
-        dispatches_query = dispatches_query.join(Need, Dispatch.need_id == Need.id).filter(Need.ward_id == ward_id)
+        ward_id_str = str(ward_id)
+        needs_query = needs_query.filter(Need.ward_id == ward_id_str)
+        volunteers_query = volunteers_query.filter(Volunteer.home_ward_id == ward_id_str)
+        dispatches_query = dispatches_query.join(Need, Dispatch.need_id == Need.id).filter(Need.ward_id == ward_id_str)
 
     needs = (await db.execute(needs_query)).scalars().all()
     volunteers = (await db.execute(volunteers_query)).scalars().all()
@@ -35,7 +36,7 @@ async def get_analytics_summary(db: AsyncSession, ward_id: uuid.UUID | None = No
 async def get_heatmap_data(db: AsyncSession, ward_id: uuid.UUID | None = None) -> list[HeatmapPoint]:
     query = select(Need).filter(Need.status == NeedStatus.OPEN)
     if ward_id:
-        query = query.filter(Need.ward_id == ward_id)
+        query = query.filter(Need.ward_id == str(ward_id))
     
     needs = (await db.execute(query)).scalars().all()
     points = []

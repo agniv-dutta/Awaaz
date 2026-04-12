@@ -1,7 +1,6 @@
 import uuid
 import enum
 from sqlalchemy import String, Text, JSON, ForeignKey
-from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from .base import BaseModel
 
@@ -23,7 +22,7 @@ class Report(BaseModel):
     source: Mapped[ReportSource] = mapped_column()
     raw_text: Mapped[str] = mapped_column(Text)
     parsed_needs: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    ward_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("wards.id"))
-    submitted_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    ward_id: Mapped[str] = mapped_column(ForeignKey("wards.id"))
+    submitted_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     status: Mapped[ReportStatus] = mapped_column(default=ReportStatus.PENDING)
-    attachments: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    attachments: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)

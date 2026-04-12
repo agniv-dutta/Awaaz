@@ -22,7 +22,7 @@ async def create_need(db: AsyncSession, need_in: NeedCreate) -> Need:
         urgency=need_in.urgency,
         urgency_score=score,
         description=need_in.description,
-        ward_id=need_in.ward_id,
+        ward_id=str(need_in.ward_id),
         location_lat=need_in.location_lat,
         location_lng=need_in.location_lng,
     )
@@ -32,12 +32,12 @@ async def create_need(db: AsyncSession, need_in: NeedCreate) -> Need:
     return db_need
 
 async def get_need(db: AsyncSession, need_id: uuid.UUID) -> Need | None:
-    result = await db.execute(select(Need).filter(Need.id == need_id))
+    result = await db.execute(select(Need).filter(Need.id == str(need_id)))
     return result.scalars().first()
 
 async def get_needs(db: AsyncSession, ward_id: uuid.UUID | None = None, skip: int = 0, limit: int = 100) -> list[Need]:
     query = select(Need).order_by(Need.urgency_score.desc()).offset(skip).limit(limit)
     if ward_id:
-        query = query.filter(Need.ward_id == ward_id)
+        query = query.filter(Need.ward_id == str(ward_id))
     result = await db.execute(query)
     return list(result.scalars().all())

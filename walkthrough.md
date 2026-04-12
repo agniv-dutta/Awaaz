@@ -1,51 +1,59 @@
 # Awaaz Backend Implementation Walkthrough
 
-The backend for **Awaaz**, a community intelligence and volunteer dispatch platform, has been fully implemented according to the 10-step development plan.
+The backend for **Awaaz**, a community intelligence and volunteer dispatch platform, now runs on SQLite with a single local Python environment.
 
 ## Completed Features
 
 ### 1. Project Infrastructure
-We completed the foundational setup including `requirements.txt`, Docker configuration (`Dockerfile` and `docker-compose.yml`), and configuration management (`.env.example`). The core configurations (Database, Celery, Redis, Security) have been stubbed out inside `app/core/`.
+The backend is set up with `requirements.txt`, SQLite configuration, and `.env.example`. Core settings for the database and security live in `app/core/`.
 
 ### 2. Database Models & Migrations
-We established SQLAlchemy 2.0 and asyncpg based database models using UUIDs for primary keys. The schema covers:
+The SQLAlchemy 2.0 models now use SQLite-friendly string IDs and JSON columns where needed. The schema covers:
 - `users` and `wards`
 - `reports`
 - `needs` and `volunteers`
 - `dispatches`
 
-Alembic has been initialized.
+Alembic has a fresh initial migration.
 
 ### 3. Pydantic Schemas
-Strict data validation has been implemented with Pydantic v2. Schemas are modularized into separate files mimicking the domain models (`auth`, `report`, `need`, `volunteer`, `dispatch`, `analytics`).
+Strict data validation is implemented with Pydantic v2. Schemas are split across domain files (`auth`, `report`, `need`, `volunteer`, `dispatch`, `analytics`).
 
 ### 4. Core Services
-Business logic implementations in `app/services/` cover:
-- **Auth**: User creation, login with JWT tokens.
-- **Reports & Needs**: Handled OCR placeholders, need aggregation logic stubs, and urgency calculations.
-- **Volunteers & Dispatch**: Registering volunteers, tracking location, creating dispatch tasks with match scoring, handling dispatch responses.
-- **Analytics**: Basic heatmaps and statistical aggregations for admin endpoints.
+Business logic in `app/services/` covers:
+- **Auth**: User creation and JWT login.
+- **Reports & Needs**: Report ingestion, urgency scoring, and need creation.
+- **Volunteers & Dispatch**: Volunteer registration, matching, and dispatch creation.
+- **Analytics**: Basic summary and heatmap aggregation.
 
 ### 5. Background Tasks
-Celery asynchronous background workers (`app/tasks/tasks.py`) have been developed using async/await wrappers for SQLAlchemy logic:
-- `report_processor`: Extract keywords from text.
-- `need_aggregator`: Group close-by reports into aggregated needs.
-- `dispatch_reminder`: Automatically decline timed-out dispatches.
-- `reliability_updater`: Compute historical metrics and update volunteer reliability scores.
+Background processing now uses FastAPI-style async helpers instead of Celery:
+- `report_processor`: Parse report content.
+- `need_aggregator`: Periodic need grouping stub.
+- `dispatch_reminder`: Auto-decline stale dispatches.
+- `reliability_updater`: Recompute volunteer reliability scores.
 
 ### 6. Routers & Endpoints
-The REST API has been fully wired up via `FastAPI` APIRouters within `app/routers/`:
-- Endpoints for `Auth`, `Reports`, `Needs`, `Volunteers`, `Dispatches`, and `Analytics`.
-- A generic WebSocket endpoint to handle real-time notifications (`/ws/notifications`).
-- Root API lifespan manages Redis connections securely.
+The API is exposed under `/api/v1` through routers in `app/routers/`:
+- Auth, Reports, Needs, Volunteers, Dispatches, and Analytics endpoints.
+- WebSocket notification support at `/api/v1/ws/notifications`.
+- Health check at `/api/v1/health`.
 
 ### 7. Testing & Seeding
-- `tests/` directory includes a `conftest.py` setup for `pytest-asyncio` using `httpx.AsyncClient` along with a test database transaction logic.
-- Basic API tests are implemented in `test_api.py`.
-- `scripts/seed.py` was created to populate your initial development database effortlessly.
+- `tests/` includes async test setup using SQLite.
+- `scripts/seed.py` populates `awaaz.db` with starter data.
 
-## Next Steps
-You can spin down the docker environment, run initial alembic migrations inside the container, and run the backend using `docker-compose up --build`.
+## Run Steps
 
-> [!TIP]
-> Ensure the PostGIS docker context is healthy before you start the migrations!
+1. `cd Awaaz/backend`
+2. `python -m venv .venv`
+3. `.venv\Scripts\activate` on Windows or `source .venv/bin/activate` on Mac/Linux
+4. `pip install -r requirements.txt`
+5. `cp .env.example .env` and set `SECRET_KEY` to any random string
+6. `alembic upgrade head`
+7. `python scripts/seed.py`
+8. `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+
+That is the complete local setup. No Docker, no Redis, and no Postgres.
+
+The API is available at http://localhost:8000 and the docs are at http://localhost:8000/docs.

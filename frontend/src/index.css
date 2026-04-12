@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #1A1A1A;
+    color: #D9D9D9;
+    font-family: 'Inter', sans-serif;
+  }
+  body {
+    background-color: transparent;
+  }
+}

@@ -1,20 +1,20 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.report import ReportCreate, ReportResponse
 from app.services.report import create_report, get_report, get_reports
-from app.tasks.tasks import process_report
+from app.services.background_tasks import report_processor
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 @router.post("/", response_model=ReportResponse)
-async def submit_report(report_in: ReportCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/submit", response_model=ReportResponse)
+async def submit_report(report_in: ReportCreate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     # Assuming user is authenticated and we have their ID. Stubbing for now.
     dummy_user_id = uuid.uuid4() 
     report = await create_report(db, report_in, dummy_user_id)
-    # Trigger background task
-    process_report.delay(str(report.id))
+    background_tasks.add_task(report_processor, str(report.id))
     return report
 
 @router.get("/{report_id}", response_model=ReportResponse)

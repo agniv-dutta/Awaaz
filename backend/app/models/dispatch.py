@@ -2,7 +2,6 @@ import uuid
 import enum
 from datetime import datetime
 from sqlalchemy import Float, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from .base import BaseModel
 
@@ -16,8 +15,8 @@ class DispatchStatus(str, enum.Enum):
 class Dispatch(BaseModel):
     __tablename__ = "dispatches"
     
-    need_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("needs.id"))
-    volunteer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("volunteers.id"))
+    need_id: Mapped[str] = mapped_column(ForeignKey("needs.id"))
+    volunteer_id: Mapped[str] = mapped_column(ForeignKey("volunteers.id"))
     match_score: Mapped[float] = mapped_column(Float)
     status: Mapped[DispatchStatus] = mapped_column(default=DispatchStatus.PENDING_ACCEPT)
     volunteer_notes: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -7,8 +7,8 @@ from app.schemas.dispatch import DispatchRespond
 
 async def create_dispatch(db: AsyncSession, need_id: uuid.UUID, volunteer_id: uuid.UUID, match_score: float) -> Dispatch:
     db_dispatch = Dispatch(
-        need_id=need_id,
-        volunteer_id=volunteer_id,
+        need_id=str(need_id),
+        volunteer_id=str(volunteer_id),
         match_score=match_score,
         notified_at=datetime.now(timezone.utc)
     )
@@ -18,7 +18,7 @@ async def create_dispatch(db: AsyncSession, need_id: uuid.UUID, volunteer_id: uu
     return db_dispatch
 
 async def get_dispatch(db: AsyncSession, dispatch_id: uuid.UUID) -> Dispatch | None:
-    result = await db.execute(select(Dispatch).filter(Dispatch.id == dispatch_id))
+    result = await db.execute(select(Dispatch).filter(Dispatch.id == str(dispatch_id)))
     return result.scalars().first()
 
 async def respond_to_dispatch(db: AsyncSession, dispatch_id: uuid.UUID, response: DispatchRespond) -> Dispatch | None:

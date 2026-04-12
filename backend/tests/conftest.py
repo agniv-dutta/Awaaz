@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.main import app
 from app.core.database import Base, get_db
 
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/awaaz_test"
+SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./awaaz_test.db"
 
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, future=True)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, future=True, connect_args={"check_same_thread": False})
 TestingSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,

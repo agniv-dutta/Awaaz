@@ -3,8 +3,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import declarative_base
 from .config import settings
 
-# engine configured for asyncpg
-engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
+engine_kwargs: dict[str, object] = {
+    "echo": False,
+    "future": True,
+}
+
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # async session maker
 AsyncSessionLocal = async_sessionmaker(
