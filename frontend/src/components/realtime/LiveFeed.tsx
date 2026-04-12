@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSocket } from '../../hooks/useSocket'
 import { C } from '../../utils/colors'
+import { Badge } from '../ui/Badge'
 
 interface FeedItem {
   id: string
@@ -17,8 +18,6 @@ const INITIAL_FEED: FeedItem[] = [
   { id: '4', category: 'MEDICAL', ward: 'Mankhurd Ward', timestamp: new Date(Date.now() - 9000000).toISOString() },
   { id: '5', category: 'FOOD', ward: 'Bandra Ward', timestamp: new Date(Date.now() - 10800000).toISOString() },
 ]
-
-const VIOLET_CATEGORIES = new Set(['MEDICAL', 'SHELTER', 'MENTAL_HEALTH'])
 
 export function LiveFeed() {
   const [items, setItems] = useState<FeedItem[]>(INITIAL_FEED)
@@ -61,7 +60,8 @@ export function LiveFeed() {
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const isOld = new Date().getTime() - new Date(item.timestamp).getTime() > 2 * 60 * 60 * 1000
-            const isViolet = VIOLET_CATEGORIES.has(item.category)
+            const isViolet = item.category === 'MEDICAL' || item.category === 'SHELTER' || item.category === 'MENTAL_HEALTH'
+            const isSilver = item.category === 'EDUCATION' || item.category === 'LEGAL' || item.category === 'OTHER'
 
             return (
               <motion.div
@@ -71,34 +71,22 @@ export function LiveFeed() {
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 style={{
-                  padding: '10px 0',
-                  borderBottom: '1px solid rgba(255, 158, 0, 0.08)',
+                  padding: '12px 0',
+                  borderBottom: '1px solid rgba(217, 217, 217, 0.08)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '12px',
                 }}
               >
                 {/* Category badge */}
-                <span style={{
-                  background: isViolet ? 'rgba(199, 125, 255, 0.12)' : 'rgba(255, 158, 0, 0.12)',
-                  color: isViolet ? C.violet : C.orange,
-                  border: `1px solid ${isViolet ? 'rgba(199,125,255,0.25)' : 'rgba(255,158,0,0.25)'}`,
-                  borderRadius: '6px',
-                  padding: '2px 8px',
-                  fontSize: '10px',
-                  fontWeight: 500,
-                  letterSpacing: '0.05em',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  textTransform: 'uppercase' as const,
-                }}>
+                <Badge variant={isSilver ? 'silver' : isViolet ? 'medium' : 'processed'}>
                   {item.category}
-                </span>
+                </Badge>
 
                 {/* Ward */}
                 <span style={{
                   fontSize: '14px',
-                  color: C.silver,
+                  color: '#D9D9D9',
                   flex: 1,
                   minWidth: 0,
                   overflow: 'hidden',

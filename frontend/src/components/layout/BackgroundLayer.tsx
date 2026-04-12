@@ -27,54 +27,57 @@ export function BackgroundLayer() {
           overflow: 'hidden',
         }}
       >
-        {/* Circle 1 — largest */}
-        <div
-          style={{
-            position: 'absolute',
-            width: '900px',
-            height: '900px',
-            borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.08)',
-            right: '-200px',
-            top: '-150px',
-          }}
-        />
-        {/* Circle 2 */}
-        <div
-          style={{
-            position: 'absolute',
-            width: '650px',
-            height: '650px',
-            borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.10)',
-            right: '-75px',
-            top: '-25px',
-          }}
-        />
-        {/* Circle 3 */}
-        <div
-          style={{
-            position: 'absolute',
-            width: '400px',
-            height: '400px',
-            borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.13)',
-            right: '50px',
-            top: '100px',
-          }}
-        />
-        {/* Circle 4 — filled core */}
-        <div
-          style={{
-            position: 'absolute',
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.06)',
-            right: '150px',
-            top: '200px',
-          }}
-        />
+        <div style={{
+          position: 'absolute',
+          right: '-180px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {/* Circle 1 — outermost (1000px) */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '1000px',
+              height: '1000px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.07)',
+            }}
+          />
+          {/* Circle 2 (720px) */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '720px',
+              height: '720px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.09)',
+            }}
+          />
+          {/* Circle 3 (480px) */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '480px',
+              height: '480px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          />
+          {/* Circle 4 — innermost (280px) */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '280px',
+              height: '280px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.16)',
+              background: 'rgba(255,255,255,0.025)',
+            }}
+          />
+        </div>
       </div>
     </>
   )

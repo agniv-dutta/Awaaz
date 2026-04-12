@@ -23,7 +23,7 @@ export function NeedsMap() {
 
   return (
     <PageWrapper noPadding>
-      {/* Map background placeholder */}
+      {/* Map background placeholder with ward zones */}
       <div style={{
         position: 'absolute',
         inset: 0,
@@ -31,15 +31,85 @@ export function NeedsMap() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'rgba(10,6,0,0.35)',
+        flexDirection: 'column',
+        padding: '40px',
       }}>
+        {/* Ward zones visualization */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '16px',
+          marginBottom: '40px',
+          width: '100%',
+          maxWidth: '600px',
+        }}>
+          {[
+            { name: 'Dharavi Ward', intensity: 'rgba(255, 158, 0, 0.35)', count: 38 },
+            { name: 'Kurla Ward', intensity: 'rgba(255, 158, 0, 0.22)', count: 24 },
+            { name: 'Govandi Ward', intensity: 'rgba(224, 90, 0, 0.18)', count: 18 },
+            { name: 'Mankhurd Ward', intensity: 'rgba(199, 125, 255, 0.12)', count: 12 },
+            { name: 'Bandra Ward', intensity: 'rgba(217, 217, 217, 0.06)', count: 6 },
+          ].map((ward) => (
+            <div
+              key={ward.name}
+              style={{
+                background: ward.intensity,
+                border: '1px solid rgba(255, 158, 0, 0.3)',
+                borderRadius: '12px',
+                padding: '24px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                position: 'relative',
+              }}
+            >
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center', lineHeight: 1.4 }}>
+                {ward.name}
+              </div>
+              <div style={{
+                background: 'rgba(255, 158, 0, 0.25)',
+                border: '1px solid rgba(255, 158, 0, 0.4)',
+                color: '#FF9E00',
+                borderRadius: '16px',
+                padding: '3px 10px',
+                fontSize: '10px',
+                fontWeight: 500,
+              }}>
+                {ward.count} needs
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
+          gap: '20px',
           alignItems: 'center',
-          gap: '8px',
+          marginBottom: '16px',
         }}>
-          <span style={{ color: 'rgba(255,158,0,0.4)', fontSize: '13px' }}>Live Map View</span>
-          <span style={{ color: 'rgba(217,217,217,0.25)', fontSize: '12px' }}>Set VITE_MAPBOX_TOKEN to enable</span>
+          {[
+            { color: 'rgba(255, 158, 0, 0.35)', label: 'High' },
+            { color: 'rgba(255, 158, 0, 0.22)', label: 'Medium' },
+            { color: 'rgba(217, 217, 217, 0.06)', label: 'Low' },
+          ].map((item) => (
+            <div key={item.label} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                background: item.color,
+                borderRadius: '2px',
+              }} />
+              <span style={{ fontSize: '11px', color: '#D9D9D9' }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Info label */}
+        <div style={{ fontSize: '11px', color: 'rgba(217, 217, 217, 0.35)', textAlign: 'center' }}>
+          LIVE MAP — Mapbox token required for full view
         </div>
       </div>
 

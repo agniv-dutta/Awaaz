@@ -35,7 +35,7 @@ export function Reports() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '860px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', letterSpacing: '-0.5px' }}>Reports</h1>
-          <p style={{ fontSize: '14px', color: C.textMuted, marginTop: '4px' }}>Submit and browse community need reports</p>
+          <p style={{ fontSize: '15px', color: '#D9D9D9', marginTop: '4px' }}>Submit and browse community need reports</p>
         </div>
 
         {/* Tab bar */}
