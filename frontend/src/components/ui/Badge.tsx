@@ -1,34 +1,40 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from "../../utils/cn"
+import { C } from '../../utils/colors'
 
-export interface BadgeProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: "critical" | "high" | "medium" | "low" | "pending" | "accepted" | "in_progress" | "completed" | "declined" | "processed" | "flagged"
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?: 'critical' | 'high' | 'medium' | 'low' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'declined' | 'processed' | 'flagged'
 }
 
-export function Badge({ className, variant = "low", ...props }: BadgeProps) {
-  const variants = {
-    critical: "bg-orange text-charcoal",
-    high: "bg-orange-dark text-charcoal",
-    medium: "bg-violet-ghost text-violet border border-violet-border",
-    low: "bg-[#D9D9D915] text-silver border border-[#D9D9D940]",
-    
-    // Status variants
-    pending: "border border-silver text-silver bg-transparent",
-    accepted: "bg-violet-ghost text-violet border border-transparent",
-    in_progress: "bg-orange-ghost text-orange border border-transparent",
-    completed: "bg-transparent text-silver border border-silver opacity-50",
-    declined: "bg-transparent text-[#EF4444] border border-[#EF4444] opacity-50",
-    processed: "bg-violet-ghost text-violet border border-transparent",
-    flagged: "bg-orange-ghost text-orange border border-transparent",
-  }
+const variantStyles: Record<string, React.CSSProperties> = {
+  critical:    { background: C.orange, color: '#1A1A1A' },
+  high:        { background: C.orangeDark, color: '#1A1A1A' },
+  medium:      { background: C.violetGhost, color: C.violet, border: `1px solid ${C.violetBorder}` },
+  low:         { background: 'rgba(217,217,217,0.08)', color: 'rgba(217,217,217,0.55)', border: '1px solid rgba(217,217,217,0.2)' },
+  pending:     { background: 'transparent', color: 'rgba(217,217,217,0.6)', border: '1px solid rgba(217,217,217,0.3)' },
+  accepted:    { background: C.violetGhost, color: C.violet, border: '1px solid transparent' },
+  in_progress: { background: C.orangeGhost, color: C.orange, border: '1px solid transparent' },
+  completed:   { background: 'transparent', color: 'rgba(217,217,217,0.4)', border: '1px solid rgba(217,217,217,0.2)', opacity: 0.6 },
+  declined:    { background: 'transparent', color: '#EF4444', border: '1px solid #EF4444', opacity: 0.6 },
+  processed:   { background: C.violetGhost, color: C.violet, border: '1px solid transparent' },
+  flagged:     { background: C.orangeGhost, color: C.orange, border: '1px solid transparent' },
+}
 
+export function Badge({ variant = 'low', style, ...props }: BadgeProps) {
   return (
-    <div
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wider",
-        variants[variant],
-        className
-      )}
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        borderRadius: '20px',
+        padding: '2px 10px',
+        fontSize: '11px',
+        fontWeight: 600,
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        ...variantStyles[variant],
+        ...style,
+      }}
       {...props}
     />
   )

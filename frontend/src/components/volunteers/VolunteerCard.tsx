@@ -1,7 +1,7 @@
 import type { Volunteer } from '../../types'
-import { Card } from "../ui/Card"
-import { Avatar } from "../ui/Avatar"
-import { ReliabilityArc } from "./ReliabilityArc"
+import { Avatar } from '../ui/Avatar'
+import { ReliabilityArc } from './ReliabilityArc'
+import { C } from '../../utils/colors'
 
 interface VolunteerCardProps {
   volunteer: Volunteer
@@ -9,22 +9,44 @@ interface VolunteerCardProps {
 }
 
 export function VolunteerCard({ volunteer, onClick }: VolunteerCardProps) {
-  // Mock name (normally from User model)
-  const name = (volunteer as any).name || "Volunteer"
+  const name = (volunteer as any).name || 'Volunteer'
 
   return (
-    <Card 
-      className="p-5 flex flex-col gap-4 cursor-pointer hover:border-silver transition-colors"
+    <div
       onClick={onClick}
+      style={{
+        background: 'rgba(26,26,26,0.65)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,158,0,0.18)',
+        borderRadius: '16px',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s, background 0.15s',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,158,0,0.40)'
+        ;(e.currentTarget as HTMLDivElement).style.background = 'rgba(26,26,26,0.75)'
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,158,0,0.18)'
+        ;(e.currentTarget as HTMLDivElement).style.background = 'rgba(26,26,26,0.65)'
+      }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar initials={name} />
-          <div className="flex flex-col">
-            <span className="text-[15px] font-medium text-silver">{name}</span>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className={`w-2 h-2 rounded-full ${volunteer.is_active ? 'bg-orange' : 'bg-charcoal-border'}`} />
-              <span className="text-xs text-silver-muted">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '15px', fontWeight: 500, color: C.silver }}>{name}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+              <div style={{
+                width: '7px', height: '7px', borderRadius: '50%',
+                background: volunteer.is_active ? C.orange : 'rgba(255,158,0,0.2)',
+              }} />
+              <span style={{ fontSize: '12px', color: C.textMuted }}>
                 {volunteer.is_active ? 'Available today' : 'Unavailable'}
               </span>
             </div>
@@ -33,18 +55,27 @@ export function VolunteerCard({ volunteer, onClick }: VolunteerCardProps) {
         <ReliabilityArc score={volunteer.reliability_score} />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* Skills */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
         {volunteer.skills.map(skill => (
-          <div key={skill} className="px-2 py-0.5 rounded-full bg-charcoal-border text-[11px] text-silver font-medium">
+          <span key={skill} style={{
+            padding: '2px 10px',
+            borderRadius: '20px',
+            background: 'rgba(255,158,0,0.08)',
+            border: '1px solid rgba(255,158,0,0.18)',
+            fontSize: '11px',
+            color: 'rgba(217,217,217,0.7)',
+            fontWeight: 500,
+          }}>
             {skill}
-          </div>
+          </span>
         ))}
       </div>
 
-      <div className="text-xs text-silver-muted mt-auto pt-2 flex justify-between">
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.textMuted, paddingTop: '4px', borderTop: '1px solid rgba(255,158,0,0.08)' }}>
         <span>Ward {volunteer.home_ward_id}</span>
         <span>{volunteer.completed_tasks} tasks done</span>
       </div>
-    </Card>
+    </div>
   )
 }

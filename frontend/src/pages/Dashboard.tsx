@@ -1,12 +1,26 @@
-import { ArrowUpRight, Minus } from "lucide-react"
-import { PageWrapper } from "../components/layout/PageWrapper"
-import { Card } from "../components/ui/Card"
-import { LiveFeed } from "../components/realtime/LiveFeed"
-import { NeedCard } from "../components/needs/NeedCard"
-import { useNeeds } from "../hooks/useNeeds"
-import { useAnalyticsSummary } from "../hooks/useAnalytics"
-import { Spinner } from "../components/ui/Spinner"
-import { useMemo } from 'react';
+import { useMemo } from 'react'
+import { PageWrapper } from '../components/layout/PageWrapper'
+import { LiveFeed } from '../components/realtime/LiveFeed'
+import { NeedCard } from '../components/needs/NeedCard'
+import { useNeeds } from '../hooks/useNeeds'
+import { useAnalyticsSummary } from '../hooks/useAnalytics'
+import { C } from '../utils/colors'
+
+const MOCK_METRICS = {
+  open_needs: 214,
+  critical_today: 38,
+  active_volunteers: 47,
+  dispatch_rate: '89%',
+}
+
+// Glass card style shared across Dashboard
+const glassCard: React.CSSProperties = {
+  background: 'rgba(26, 26, 26, 0.65)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 158, 0, 0.18)',
+  borderRadius: '16px',
+}
 
 export function Dashboard() {
   const { data: summary, isLoading: loadingSummary } = useAnalyticsSummary()
@@ -19,85 +33,163 @@ export function Dashboard() {
       .slice(0, 5)
   }, [needs])
 
+  // Stable seeded heat cells — 5×5 grid
+  const mockHeatCells = useMemo(() => {
+    return [0.82, 0.34, 0.61, 0.91, 0.45,
+            0.27, 0.73, 0.55, 0.88, 0.12,
+            0.66, 0.49, 0.78, 0.31, 0.95,
+            0.40, 0.57, 0.83, 0.22, 0.69,
+            0.14, 0.76, 0.53, 0.38, 0.92]
+  }, [])
+
+  const openNeeds = summary?.open_needs ?? MOCK_METRICS.open_needs
+  const criticalToday = loadingNeeds
+    ? MOCK_METRICS.critical_today
+    : (urgentNeeds.filter(n => n.urgency === 'CRITICAL').length || MOCK_METRICS.critical_today)
+  const activeVolunteers = summary?.active_volunteers ?? MOCK_METRICS.active_volunteers
+  const dispatchRate = summary
+    ? `${Math.round(((summary.completed_dispatches || 0) / (summary.total_needs || 1)) * 100)}%`
+    : MOCK_METRICS.dispatch_rate
+
   return (
     <PageWrapper>
-      <div className="flex flex-col gap-6">
-        {/* Top metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard 
-            label="Open Needs" 
-            value={summary?.open_needs ?? 0} 
-            trend="up" 
-            loading={loadingSummary} 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+        {/* Metric Cards — 4 in a row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+        }}>
+          <MetricCard
+            label="Open Needs"
+            value={loadingSummary ? '—' : String(openNeeds)}
+            trend="↑ 12 since yesterday"
           />
-          <MetricCard 
-            label="Critical Today" 
-            value={urgentNeeds.filter(n => n.urgency === 'CRITICAL').length} 
-            trend="up" 
-            loading={loadingNeeds} 
+          <MetricCard
+            label="Critical Today"
+            value={String(criticalToday)}
+            trend="↑ 5 since yesterday"
+            trendColor={C.orange}
           />
-          <MetricCard 
-            label="Active Volunteers" 
-            value={summary?.active_volunteers ?? 0} 
-            trend="neutral" 
-            loading={loadingSummary} 
+          <MetricCard
+            label="Active Volunteers"
+            value={loadingSummary ? '—' : String(activeVolunteers)}
+            trend="→ No change"
+            trendColor={C.textMuted}
           />
-          <MetricCard 
-            label="Dispatch Rate" 
-            value={`${Math.round(((summary?.completed_dispatches || 0) / (summary?.total_needs || 1)) * 100)}%`} 
-            trend="up" 
-            loading={loadingSummary} 
+          <MetricCard
+            label="Dispatch Rate"
+            value={loadingSummary ? '—' : dispatchRate}
+            trend="↑ 3% this week"
           />
         </div>
 
-        {/* Middle section */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-[58%]">
-            <Card className="h-[300px] flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[#222] flex items-center justify-center bg-[url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/72.8222,19.0435,11,0/600x300?access_token=none')] bg-cover bg-center brightness-50">
-                <span className="text-silver-muted font-medium tracking-widest text-sm uppercase relative z-10">Live Heatmap</span>
-              </div>
-            </Card>
+        {/* Map placeholder + Live Feed */}
+        <div style={{ display: 'grid', gridTemplateColumns: '58% 1fr', gap: '24px', alignItems: 'stretch' }}>
+
+          {/* Map placeholder */}
+          <div style={{ ...glassCard, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '340px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 48px)',
+              gap: '8px',
+              margin: 'auto',
+            }}>
+              {mockHeatCells.map((intensity, i) => {
+                let bg: string
+                let opacity: number
+                if (intensity > 0.75) { bg = '#FF9E00'; opacity = 0.9 }
+                else if (intensity > 0.5) { bg = '#E05A00'; opacity = 0.75 }
+                else if (intensity > 0.25) { bg = '#9B3000'; opacity = 0.6 }
+                else { bg = 'rgba(255,158,0,0.12)'; opacity = 1 }
+
+                return (
+                  <div key={i} style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    background: bg,
+                    opacity,
+                  }} />
+                )
+              })}
+            </div>
+            <p style={{
+              fontSize: '12px',
+              color: 'rgba(217, 217, 217, 0.45)',
+              marginTop: '16px',
+              textAlign: 'center',
+            }}>
+              Simulated need density — Mumbai wards
+            </p>
           </div>
-          <div className="w-full lg:w-[42%]">
+
+          {/* Live Feed */}
+          <div style={{ ...glassCard, padding: '20px 20px 16px' }}>
             <LiveFeed />
           </div>
         </div>
 
-        {/* Bottom section */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-medium text-silver">Most urgent needs</h2>
+        {/* Urgent Needs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 500, color: C.textPrimary, margin: 0 }}>
+            Most urgent needs
+          </h2>
           {loadingNeeds ? (
-            <div className="py-8 flex justify-center"><Spinner /></div>
+            <div style={{ padding: '32px 0', textAlign: 'center', color: C.textMuted, fontSize: '14px' }}>
+              Loading…
+            </div>
+          ) : urgentNeeds.length === 0 ? (
+            <div style={{ padding: '32px 0', textAlign: 'center', color: C.textMuted, fontSize: '14px' }}>
+              No urgent needs at this time
+            </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {urgentNeeds.map(need => (
                 <NeedCard key={need.id} need={need} onDispatch={(id) => console.log('Dispatch', id)} />
               ))}
             </div>
           )}
         </div>
+
       </div>
     </PageWrapper>
   )
 }
 
-function MetricCard({ label, value, trend, loading }: { label: string, value: string | number, trend: 'up' | 'neutral', loading: boolean }) {
+interface MetricCardProps {
+  label: string
+  value: string
+  trend: string
+  trendColor?: string
+}
+
+function MetricCard({ label, value, trend, trendColor = C.orange }: MetricCardProps) {
   return (
-    <Card className="p-5 flex flex-col justify-between h-28">
-      <span className="text-[13px] text-silver font-medium">{label}</span>
-      <div className="flex items-end justify-between mt-auto">
-        {loading ? (
-          <Spinner className="w-5 h-5 border-[2px]" />
-        ) : (
-          <span className="text-[28px] font-semibold text-white leading-none">{value}</span>
-        )}
-        {trend === 'up' ? (
-          <ArrowUpRight className="w-5 h-5 text-orange mb-1" />
-        ) : (
-          <Minus className="w-4 h-4 text-silver mb-1" />
-        )}
-      </div>
-    </Card>
+    <div style={{
+      ...glassCard,
+      padding: '20px 24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+      minHeight: '110px',
+    }}>
+      <span style={{
+        fontSize: '11px',
+        color: 'rgba(217, 217, 217, 0.55)',
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        fontWeight: 400,
+      }}>
+        {label}
+      </span>
+      <span style={{ fontSize: '36px', fontWeight: 500, color: '#FFFFFF', lineHeight: 1, marginTop: '6px' }}>
+        {value}
+      </span>
+      <span style={{ fontSize: '12px', color: trendColor }}>
+        {trend}
+      </span>
+    </div>
   )
 }

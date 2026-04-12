@@ -1,17 +1,20 @@
 import { forwardRef } from 'react';
 import type { HTMLAttributes } from 'react';
-import { cn } from "../../utils/cn"
 
 export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ style, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(
-        "rounded-[14px] border border-charcoal-border bg-charcoal-light",
-        className
-      )}
+      style={{
+        background: 'rgba(26, 26, 26, 0.65)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255, 158, 0, 0.18)',
+        borderRadius: '16px',
+        ...style,
+      }}
       {...props}
     />
   )
 )
-Card.displayName = "Card"
+Card.displayName = 'Card'

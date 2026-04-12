@@ -1,6 +1,6 @@
-import { NavLink } from "react-router-dom"
-import { BarChart3, LayoutDashboard, Map, FileText, Users, Truck } from "lucide-react"
-import { cn } from "../../utils/cn"
+import { NavLink } from 'react-router-dom'
+import { BarChart3, LayoutDashboard, Map, FileText, Users, Truck } from 'lucide-react'
+import { C } from '../../utils/colors'
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -13,35 +13,95 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   return (
-    <aside className="w-16 lg:w-60 h-screen shrink-0 border-r border-charcoal-border bg-charcoal-light flex flex-col items-center lg:items-stretch py-6 transition-all duration-300">
-      <div className="flex items-center justify-center lg:justify-start px-2 lg:px-6 mb-8">
-        <div className="w-8 h-8 rounded-full bg-orange flex items-center justify-center shrink-0">
-          <span className="font-bold text-charcoal text-lg leading-none">A</span>
-        </div>
-        <span className="ml-3 font-bold text-xl text-silver tracking-tight hidden lg:block">
+    <div style={{
+      width: '240px',
+      background: 'rgba(26, 26, 26, 0.85)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRight: '1px solid rgba(255, 158, 0, 0.15)',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      zIndex: 100,
+    }}>
+      {/* Logo section */}
+      <div style={{
+        height: '72px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '0 24px',
+        borderBottom: '1px solid rgba(255, 158, 0, 0.12)',
+        flexShrink: 0,
+      }}>
+        <span style={{
+          fontSize: '24px',
+          fontWeight: 600,
+          color: C.orange,
+          letterSpacing: '-0.5px',
+          display: 'block',
+          lineHeight: 1,
+        }}>
           Awaaz
         </span>
+        <div style={{
+          fontSize: '11px',
+          color: 'rgba(217, 217, 217, 0.5)',
+          marginTop: '3px',
+          letterSpacing: '0.02em',
+        }}>
+          Community Intelligence
+        </div>
       </div>
-      <nav className="flex-1 flex flex-col gap-2 px-2 lg:px-3">
+
+      {/* Nav items */}
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 0' }}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           return (
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) => cn(
-                "flex items-center justify-center lg:justify-start px-3 py-3 rounded-lg transition-colors group",
-                isActive 
-                  ? "bg-[#FF9E0010] text-orange" 
-                  : "text-silver-muted hover:bg-[#D9D9D908] hover:text-silver"
-              )}
+              end={item.path === '/'}
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 16px',
+                margin: '2px 10px',
+                borderRadius: '10px',
+                background: isActive ? 'rgba(255, 158, 0, 0.15)' : 'transparent',
+                color: isActive ? C.orange : 'rgba(217, 217, 217, 0.55)',
+                border: isActive ? '1px solid rgba(255, 158, 0, 0.25)' : '1px solid transparent',
+                fontSize: '14px',
+                fontWeight: isActive ? 500 : 400,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+              })}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget
+                if (!el.getAttribute('aria-current')) {
+                  el.style.background = 'rgba(255, 158, 0, 0.08)'
+                  el.style.color = '#D9D9D9'
+                }
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget
+                if (!el.getAttribute('aria-current')) {
+                  el.style.background = 'transparent'
+                  el.style.color = 'rgba(217, 217, 217, 0.55)'
+                }
+              }}
             >
-              <Icon className="w-5 h-5 shrink-0" />
-              <span className="ml-3 font-medium hidden lg:block">{item.name}</span>
+              <Icon size={16} color="currentColor" />
+              {item.name}
             </NavLink>
           )
         })}
       </nav>
-    </aside>
+    </div>
   )
 }

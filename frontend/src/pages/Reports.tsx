@@ -1,37 +1,62 @@
 import { useState } from 'react';
-import { PageWrapper } from "../components/layout/PageWrapper"
-import { Card } from "../components/ui/Card"
-import { Button } from "../components/ui/Button"
-import { Spinner } from "../components/ui/Spinner"
-import { UploadCloud } from "lucide-react"
+import { PageWrapper } from '../components/layout/PageWrapper'
+import { Button } from '../components/ui/Button'
+import { Spinner } from '../components/ui/Spinner'
+import { UploadCloud } from 'lucide-react'
+import { C } from '../utils/colors'
+
+const glassCard: React.CSSProperties = {
+  background: 'rgba(26, 26, 26, 0.65)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 158, 0, 0.18)',
+  borderRadius: '16px',
+}
+
+const tabBase: React.CSSProperties = {
+  paddingBottom: '10px',
+  paddingLeft: '4px',
+  paddingRight: '4px',
+  fontSize: '14px',
+  fontWeight: 500,
+  background: 'none',
+  border: 'none',
+  borderBottom: '2px solid transparent',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  transition: 'all 0.15s',
+}
 
 export function Reports() {
   const [activeTab, setActiveTab] = useState<'submit' | 'ocr' | 'browse'>('submit')
 
   return (
     <PageWrapper>
-      <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
-        <h1 className="text-2xl font-medium text-silver">Reports</h1>
-        
-        <div className="flex gap-4 border-b border-charcoal-border pb-2">
-          <button 
-            className={`pb-2 -mb-2.5 px-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'submit' ? 'border-orange text-orange' : 'border-transparent text-silver-muted hover:text-silver'}`}
-            onClick={() => setActiveTab('submit')}
-          >
-            Submit Report
-          </button>
-          <button 
-             className={`pb-2 -mb-2.5 px-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'ocr' ? 'border-orange text-orange' : 'border-transparent text-silver-muted hover:text-silver'}`}
-             onClick={() => setActiveTab('ocr')}
-          >
-            Upload Document
-          </button>
-          <button 
-            className={`pb-2 -mb-2.5 px-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'browse' ? 'border-orange text-orange' : 'border-transparent text-silver-muted hover:text-silver'}`}
-            onClick={() => setActiveTab('browse')}
-          >
-            Browse Past
-          </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '860px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', letterSpacing: '-0.5px' }}>Reports</h1>
+          <p style={{ fontSize: '14px', color: C.textMuted, marginTop: '4px' }}>Submit and browse community need reports</p>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: '20px', borderBottom: '1px solid rgba(255,158,0,0.12)', paddingBottom: '0' }}>
+          {(['submit', 'ocr', 'browse'] as const).map(tab => {
+            const labels = { submit: 'Submit Report', ocr: 'Upload Document', browse: 'Browse Past' }
+            const isActive = activeTab === tab
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  ...tabBase,
+                  color: isActive ? C.orange : 'rgba(217,217,217,0.55)',
+                  borderBottomColor: isActive ? C.orange : 'transparent',
+                }}
+              >
+                {labels[tab]}
+              </button>
+            )
+          })}
         </div>
 
         {activeTab === 'submit' && <SubmitTab />}
@@ -47,58 +72,123 @@ function SubmitTab() {
   const [selectedCat, setSelectedCat] = useState('MEDICAL')
   const [urgency, setUrgency] = useState('HIGH')
 
+  const urgencyColors: Record<string, string> = {
+    CRITICAL: C.orange,
+    HIGH: C.orangeDark,
+    MEDIUM: C.violet,
+    LOW: 'rgba(217,217,217,0.4)',
+  }
+
   return (
-    <div className="flex flex-col gap-6 mt-4">
-      <Card className="p-6 flex flex-col gap-6">
-        <div>
-           <label className="text-sm font-medium text-silver mb-3 block">Category</label>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-             {categories.map(cat => (
-               <button
-                 key={cat}
-                 onClick={() => setSelectedCat(cat)}
-                 className={`py-3 px-4 rounded-lg text-sm transition-colors border ${selectedCat === cat ? 'border-orange bg-[#FF9E0010] text-orange' : 'border-charcoal-border bg-charcoal text-silver hover:border-silver'}`}
-               >
-                 {cat}
-               </button>
-             ))}
-           </div>
+    <div style={{ ...glassCard, padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Category chips */}
+      <div>
+        <label style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>
+          Category
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCat(cat)}
+              style={{
+                padding: '10px 12px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'all 0.15s',
+                background: selectedCat === cat ? 'rgba(255,158,0,0.15)' : 'rgba(255,158,0,0.05)',
+                border: `1px solid ${selectedCat === cat ? 'rgba(255,158,0,0.5)' : 'rgba(255,158,0,0.15)'}`,
+                color: selectedCat === cat ? C.orange : 'rgba(217,217,217,0.6)',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div>
-           <label className="text-sm font-medium text-silver mb-2 block">Description</label>
-           <textarea 
-             className="w-full min-h-[120px] rounded-lg border border-charcoal-border bg-charcoal p-3 text-sm text-silver focus:outline-none focus:ring-2 focus:ring-orange placeholder:text-silver-muted"
-             placeholder="Describe the need..."
-           />
+      {/* Description */}
+      <div>
+        <label style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+          Description
+        </label>
+        <textarea
+          placeholder="Describe the need..."
+          rows={4}
+          style={{
+            width: '100%',
+            background: 'rgba(26,26,26,0.6)',
+            border: '1px solid rgba(255,158,0,0.2)',
+            borderRadius: '8px',
+            color: '#FFFFFF',
+            padding: '12px',
+            fontSize: '14px',
+            fontFamily: 'inherit',
+            outline: 'none',
+            resize: 'vertical',
+          }}
+          onFocus={e => (e.currentTarget.style.borderColor = '#FF9E00')}
+          onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,158,0,0.2)')}
+        />
+      </div>
+
+      {/* Ward + Urgency row */}
+      <div style={{ display: 'flex', gap: '24px' }}>
+        <div style={{ flex: 1 }}>
+          <label style={{ fontSize: '11px', color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Ward</label>
+          <select style={{
+            width: '100%',
+            height: '40px',
+            background: 'rgba(26,26,26,0.6)',
+            border: '1px solid rgba(255,158,0,0.2)',
+            borderRadius: '8px',
+            color: '#FFFFFF',
+            padding: '0 12px',
+            fontSize: '14px',
+            fontFamily: 'inherit',
+            outline: 'none',
+          }}>
+            <option>Ward 1 - Dharavi</option>
+            <option>Ward 2 - Kurla</option>
+            <option>Ward 3 - Govandi</option>
+          </select>
         </div>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
-             <label className="text-sm font-medium text-silver mb-2 block">Ward</label>
-             <select className="w-full h-10 rounded-lg border border-charcoal-border bg-charcoal px-3 text-sm text-silver focus:outline-none focus:ring-2 focus:ring-orange">
-               <option>Ward 1 - Dharavi</option>
-               <option>Ward 2 - Kurla</option>
-             </select>
+        <div style={{ flex: 1 }}>
+          <label style={{ fontSize: '11px', color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Urgency</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(u => (
+              <button
+                key={u}
+                onClick={() => setUrgency(u)}
+                style={{
+                  flex: 1,
+                  padding: '8px 4px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.15s',
+                  background: urgency === u ? urgencyColors[u] + '22' : 'transparent',
+                  border: `1px solid ${urgency === u ? urgencyColors[u] : 'rgba(255,158,0,0.2)'}`,
+                  color: urgency === u ? urgencyColors[u] : 'rgba(217,217,217,0.55)',
+                }}
+              >
+                {u}
+              </button>
+            ))}
           </div>
-          <div className="flex-1">
-             <label className="text-sm font-medium text-silver mb-2 block">Urgency</label>
-             <div className="flex gap-2">
-               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(u => (
-                 <button
-                   key={u}
-                   onClick={() => setUrgency(u)}
-                   className={`flex-1 py-2 rounded-full text-xs font-semibold ${urgency === u ? 'bg-orange text-charcoal' : 'bg-charcoal border border-charcoal-border text-silver hover:border-silver'}`}
-                 >
-                   {u}
-                 </button>
-               ))}
-             </div>
-          </div>
         </div>
+      </div>
 
-        <Button className="w-full mt-4">Submit Report</Button>
-      </Card>
+      <Button variant="primary" style={{ alignSelf: 'flex-start', padding: '11px 28px' }}>
+        Submit Report
+      </Button>
     </div>
   )
 }
@@ -106,66 +196,100 @@ function SubmitTab() {
 function OCRTab() {
   const [isHover, setIsHover] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [text, setText] = useState("")
+  const [text, setText] = useState('')
 
   const handleSimulate = () => {
     setIsProcessing(true)
     setTimeout(() => {
       setIsProcessing(false)
-      setText("Extracted: Needs 50 blankets and medical supply kit near main crossroad.")
+      setText('Extracted: Needs 50 blankets and medical supply kit near main crossroad.')
     }, 2000)
   }
 
   return (
-    <div className="flex flex-col gap-6 mt-4">
-      <div 
-        className={`w-full h-64 border-2 border-dashed rounded-[14px] flex flex-col justify-center items-center cursor-pointer transition-colors ${isHover ? 'border-orange bg-[#FF9E0006]' : 'border-[#FF9E0059] bg-transparent'}`}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div
+        style={{
+          width: '100%',
+          height: '240px',
+          border: `2px dashed ${isHover ? C.orange : 'rgba(255,158,0,0.35)'}`,
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          cursor: 'pointer',
+          background: isHover ? 'rgba(255,158,0,0.05)' : 'transparent',
+          transition: 'all 0.2s',
+        }}
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
         onClick={handleSimulate}
       >
         {isProcessing ? (
-          <div className="flex flex-col items-center gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <Spinner />
-            <span className="text-orange font-medium animate-pulse">Extracting needs...</span>
+            <span style={{ color: C.orange, fontWeight: 500 }}>Extracting needs...</span>
           </div>
         ) : (
           <>
-            <UploadCloud className="w-12 h-12 text-orange mb-4 opacity-50" />
-            <span className="text-silver font-medium">Drop PDF or image here</span>
-            <span className="text-silver-muted text-sm mt-1">.pdf, .jpg, .png</span>
+            <UploadCloud style={{ width: '48px', height: '48px', color: C.orange, opacity: 0.5, marginBottom: '12px' }} />
+            <span style={{ color: '#D9D9D9', fontWeight: 500 }}>Drop PDF or image here</span>
+            <span style={{ color: C.textMuted, fontSize: '13px', marginTop: '4px' }}>.pdf, .jpg, .png</span>
           </>
         )}
       </div>
 
       {text && (
-        <Card className="p-4 flex flex-col gap-4">
-           <label className="text-sm font-medium text-silver">Extracted Content</label>
-           <textarea 
-             className="w-full min-h-[100px] rounded-lg border border-charcoal-border bg-charcoal p-3 text-sm text-silver focus:outline-none focus:ring-2 focus:ring-orange"
-             value={text}
-             onChange={e => setText(e.target.value)}
-           />
-           <Button>Confirm & Submit</Button>
-        </Card>
+        <div style={{ ...glassCard, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <label style={{ fontSize: '13px', fontWeight: 500, color: '#D9D9D9' }}>Extracted Content</label>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={3}
+            style={{
+              width: '100%',
+              background: 'rgba(26,26,26,0.6)',
+              border: '1px solid rgba(255,158,0,0.2)',
+              borderRadius: '8px',
+              color: '#FFFFFF',
+              padding: '12px',
+              fontSize: '14px',
+              fontFamily: 'inherit',
+              outline: 'none',
+              resize: 'vertical',
+            }}
+          />
+          <Button variant="primary" style={{ alignSelf: 'flex-start' }}>Confirm &amp; Submit</Button>
+        </div>
       )}
     </div>
   )
 }
 
 function BrowseTab() {
+  const statuses = ['PENDING', 'PROCESSED', 'FLAGGED']
   return (
-    <div className="flex flex-col gap-4 mt-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {[1, 2, 3].map(i => (
-        <Card key={i} className="p-4 flex justify-between items-center">
-          <div className="flex flex-col gap-1">
-             <span className="text-silver text-sm font-medium">Report #{i}293</span>
-             <span className="text-xs text-silver-muted">Today at 10:45 AM</span>
+        <div key={i} style={{ ...glassCard, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ color: '#D9D9D9', fontSize: '14px', fontWeight: 500 }}>Report #{i}293</span>
+            <span style={{ color: C.textMuted, fontSize: '12px' }}>Today at {9 + i}:45 AM · Ward {i}</span>
           </div>
-          <div className="text-[11px] px-2 py-0.5 rounded-full border border-silver text-silver tracking-wider uppercase font-semibold">
-            PENDING
-          </div>
-        </Card>
+          <span style={{
+            fontSize: '10px',
+            padding: '3px 10px',
+            borderRadius: '20px',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            border: `1px solid ${i === 1 ? 'rgba(255,158,0,0.35)' : i === 2 ? C.violetBorder : 'rgba(217,217,217,0.25)'}`,
+            color: i === 1 ? C.orange : i === 2 ? C.violet : 'rgba(217,217,217,0.5)',
+            background: i === 1 ? C.orangeGhost : i === 2 ? C.violetGhost : 'transparent',
+          }}>
+            {statuses[i - 1]}
+          </span>
+        </div>
       ))}
     </div>
   )

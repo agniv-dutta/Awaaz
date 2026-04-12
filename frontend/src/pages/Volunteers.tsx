@@ -1,106 +1,177 @@
 import { useState } from 'react';
-import { Search, X } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { PageWrapper } from "../components/layout/PageWrapper"
-import { Input } from "../components/ui/Input"
-import { VolunteerCard } from "../components/volunteers/VolunteerCard"
-import { useVolunteers } from "../hooks/useVolunteers"
-import { Spinner } from "../components/ui/Spinner"
+import { Search, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PageWrapper } from '../components/layout/PageWrapper'
+import { VolunteerCard } from '../components/volunteers/VolunteerCard'
+import { useVolunteers } from '../hooks/useVolunteers'
+import { Spinner } from '../components/ui/Spinner'
 import type { Volunteer } from '../types'
-import { Button } from "../components/ui/Button"
-import { Card } from "../components/ui/Card"
+import { Button } from '../components/ui/Button'
+import { C } from '../utils/colors'
 
 const allSkills = ['MEDICAL', 'LOGISTICS', 'TEACHING', 'COOKING', 'LEGAL', 'TRANSLATION']
 
 export function Volunteers() {
   const { data: volunteers, isLoading } = useVolunteers()
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
   const [activeSkills, setActiveSkills] = useState<string[]>([])
   const [selectedVol, setSelectedVol] = useState<Volunteer | null>(null)
 
   const toggleSkill = (skill: string) => {
-    setActiveSkills(prev => 
+    setActiveSkills(prev =>
       prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
     )
   }
 
   const filteredVols = volunteers?.filter(v => {
-    const matchSearch = ((v as any).name || "").toLowerCase().includes(search.toLowerCase())
+    const matchSearch = ((v as any).name || '').toLowerCase().includes(search.toLowerCase())
     const matchSkills = activeSkills.length === 0 || activeSkills.some(s => v.skills.includes(s))
     return matchSearch && matchSkills
   }) || []
 
   return (
     <PageWrapper>
-      <div className="flex flex-col gap-6 relative">
-        <div className="flex flex-col gap-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-silver-muted" />
-            <Input 
-              className="pl-9" 
-              placeholder="Search volunteers by name..." 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', letterSpacing: '-0.5px' }}>Volunteers</h1>
+          <p style={{ fontSize: '14px', color: C.textMuted, marginTop: '4px' }}>Browse and assign community volunteers</p>
+        </div>
+
+        {/* Search + filter chips */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Search box */}
+          <div style={{ position: 'relative', maxWidth: '380px' }}>
+            <Search style={{
+              position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+              width: '16px', height: '16px', color: C.textMuted,
+            }} />
+            <input
+              placeholder="Search volunteers by name..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                height: '40px',
+                paddingLeft: '38px',
+                paddingRight: '12px',
+                background: 'rgba(26,26,26,0.6)',
+                border: '1px solid rgba(255,158,0,0.2)',
+                borderRadius: '8px',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#FF9E00')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,158,0,0.2)')}
             />
           </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {allSkills.map(skill => (
-              <button
-                key={skill}
-                onClick={() => toggleSkill(skill)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                  activeSkills.includes(skill)
-                    ? 'bg-orange border-orange text-charcoal'
-                    : 'bg-transparent border-silver text-silver hover:border-orange'
-                }`}
-              >
-                {skill}
-              </button>
-            ))}
+
+          {/* Skill filter chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {allSkills.map(skill => {
+              const isActive = activeSkills.includes(skill)
+              return (
+                <button
+                  key={skill}
+                  onClick={() => toggleSkill(skill)}
+                  style={{
+                    padding: '5px 14px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    letterSpacing: '0.03em',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.15s',
+                    background: isActive ? 'rgba(255,158,0,0.15)' : 'transparent',
+                    border: `1px solid ${isActive ? 'rgba(255,158,0,0.5)' : 'rgba(255,158,0,0.25)'}`,
+                    color: isActive ? C.orange : 'rgba(217,217,217,0.6)',
+                  }}
+                >
+                  {skill}
+                </button>
+              )
+            })}
           </div>
         </div>
 
+        {/* Volunteer grid */}
         {isLoading ? (
-          <div className="py-20 flex justify-center"><Spinner /></div>
+          <div style={{ padding: '60px 0', display: 'flex', justifyContent: 'center' }}>
+            <Spinner />
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVols.map((vol) => (
-              <VolunteerCard 
-                key={vol.id} 
-                volunteer={vol} 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            {filteredVols.map(vol => (
+              <VolunteerCard
+                key={vol.id}
+                volunteer={vol}
                 onClick={() => setSelectedVol(vol)}
               />
             ))}
           </div>
         )}
 
+        {/* Detail drawer */}
         <AnimatePresence>
           {selectedVol && (
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-screen w-full md:w-[400px] bg-charcoal border-l border-charcoal-border shadow-2xl z-50 overflow-y-auto"
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: '100vh',
+                width: '380px',
+                background: 'rgba(26,26,26,0.92)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderLeft: '1px solid rgba(255,158,0,0.2)',
+                zIndex: 200,
+                overflowY: 'auto',
+                padding: '32px 24px',
+              }}
             >
-              <div className="p-6">
-                <button onClick={() => setSelectedVol(null)} className="absolute top-6 right-6 text-silver hover:text-white">
-                  <X className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-medium text-silver mb-8">{(selectedVol as any).name || 'Volunteer Details'}</h2>
-                
-                <div className="mb-8">
-                  <h3 className="text-sm font-medium text-silver-muted mb-4">Availability</h3>
-                  <Card className="p-4 flex items-center justify-center h-32 bg-charcoal-light">
-                    <span className="text-silver-muted text-sm">7-day matrix active slots overview</span>
-                  </Card>
-                </div>
+              <button
+                onClick={() => setSelectedVol(null)}
+                style={{
+                  position: 'absolute', top: '24px', right: '24px',
+                  background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted,
+                }}
+              >
+                <X size={20} />
+              </button>
+              <h2 style={{ fontSize: '20px', fontWeight: 500, color: '#FFFFFF', marginBottom: '24px', marginTop: '4px' }}>
+                {(selectedVol as any).name || 'Volunteer Details'}
+              </h2>
 
-                <div className="flex gap-4">
-                  <Button variant="secondary" className="flex-1">Contact</Button>
-                  <Button variant="primary" className="flex-1">Assign to need</Button>
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '11px', color: C.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                  Availability
+                </h3>
+                <div style={{
+                  background: 'rgba(255,158,0,0.06)',
+                  border: '1px solid rgba(255,158,0,0.15)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100px',
+                  color: C.textMuted,
+                  fontSize: '13px',
+                }}>
+                  7-day availability matrix
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Button variant="secondary" style={{ flex: 1 }}>Contact</Button>
+                <Button variant="primary" style={{ flex: 1 }}>Assign to need</Button>
               </div>
             </motion.div>
           )}

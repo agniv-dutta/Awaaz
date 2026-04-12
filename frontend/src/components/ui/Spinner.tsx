@@ -1,14 +1,19 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from "../../utils/cn"
 
-export function Spinner({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function Spinner({ style, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-solid border-orange border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]",
-        className
-      )}
       role="status"
+      style={{
+        display: 'inline-block',
+        width: '24px',
+        height: '24px',
+        borderRadius: '50%',
+        border: '3px solid rgba(255,158,0,0.2)',
+        borderTopColor: '#FF9E00',
+        animation: 'spin 0.8s linear infinite',
+        ...style,
+      }}
       {...props}
     />
   )

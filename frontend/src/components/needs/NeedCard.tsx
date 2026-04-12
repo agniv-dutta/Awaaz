@@ -1,7 +1,5 @@
 import type { Need } from '../../types'
-import { UrgencyBadge } from "./UrgencyBadge"
-import { Button } from "../ui/Button"
-import { Card } from "../ui/Card"
+import { C } from '../../utils/colors'
 
 interface NeedCardProps {
   need: Need
@@ -9,36 +7,107 @@ interface NeedCardProps {
 }
 
 export function NeedCard({ need, onDispatch }: NeedCardProps) {
-  const edgeColorMap = {
-    CRITICAL: "bg-[#FF9E00]",
-    HIGH: "bg-[#E05A00]",
-    MEDIUM: "bg-[#C77DFF]",
-    LOW: "bg-[#888888]",
-  }
+  const urgencyColor =
+    need.urgency === 'CRITICAL' ? C.orange :
+    need.urgency === 'HIGH' ? C.orangeDark :
+    need.urgency === 'MEDIUM' ? C.violet :
+    C.low
 
-  // Calculate time since last report
-  const timeSince = "12m ago" // Mock logic
+  const isViolet = need.urgency === 'MEDIUM'
 
   return (
-    <Card className="relative overflow-hidden pl-4 pr-4 py-3 flex items-center justify-between">
-      {/* Edge bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${edgeColorMap[need.urgency]}`} />
-      
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-silver">{need.category}</span>
-          <UrgencyBadge urgency={need.urgency} />
-        </div>
-        <div className="text-xs text-silver-muted flex items-center gap-2">
-          <span>Ward {need.ward_id}</span>
-          <span>•</span>
-          <span>{need.report_count} reports</span>
-          <span>•</span>
-          <span>{timeSince}</span>
-        </div>
+    <div style={{
+      background: 'rgba(26, 26, 26, 0.65)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255, 158, 0, 0.18)',
+      borderLeft: `3px solid ${urgencyColor}`,
+      borderRadius: '16px',
+      borderTopLeftRadius: 0,
+      borderBottomLeftRadius: 0,
+      padding: '14px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+    }}>
+      {/* Left: badges */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {/* Category badge */}
+        <span style={{
+          background: isViolet ? C.violetGhost : C.orangeGhost,
+          color: isViolet ? C.violet : C.orange,
+          border: `1px solid ${isViolet ? C.violetBorder : 'rgba(255,158,0,0.25)'}`,
+          borderRadius: '6px',
+          padding: '2px 8px',
+          fontSize: '10px',
+          fontWeight: 500,
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase' as const,
+        }}>
+          {need.category}
+        </span>
+
+        {/* Urgency badge */}
+        <span style={{
+          background: urgencyColor + '22',
+          color: urgencyColor,
+          border: `1px solid ${urgencyColor}55`,
+          borderRadius: '6px',
+          padding: '2px 8px',
+          fontSize: '10px',
+          fontWeight: 500,
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase' as const,
+        }}>
+          {need.urgency}
+        </span>
       </div>
 
-      <Button onClick={() => onDispatch?.(need.id)}>Dispatch</Button>
-    </Card>
+      {/* Center: ward name */}
+      <span style={{
+        fontSize: '14px',
+        color: C.silver,
+        flex: 1,
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}>
+        Ward {need.ward_id}
+      </span>
+
+      {/* Report count */}
+      <span style={{
+        fontSize: '12px',
+        color: C.textMuted,
+        flexShrink: 0,
+        minWidth: '80px',
+        textAlign: 'right',
+      }}>
+        {need.report_count} reports
+      </span>
+
+      {/* Dispatch button */}
+      <button
+        onClick={() => onDispatch?.(need.id)}
+        style={{
+          padding: '6px 16px',
+          borderRadius: '8px',
+          border: 'none',
+          background: C.orange,
+          color: '#1A1A1A',
+          fontSize: '13px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          flexShrink: 0,
+          transition: 'background 0.15s ease',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = '#E08800')}
+        onMouseLeave={e => (e.currentTarget.style.background = C.orange)}
+      >
+        Dispatch →
+      </button>
+    </div>
   )
 }

@@ -1,8 +1,19 @@
-import { PageWrapper } from "../components/layout/PageWrapper"
-import { Card } from "../components/ui/Card"
-import { Input } from "../components/ui/Input"
-import { Button } from "../components/ui/Button"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { PageWrapper } from '../components/layout/PageWrapper'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend
+} from 'recharts'
+import { C } from '../utils/colors'
+
+const glassCard: React.CSSProperties = {
+  background: 'rgba(26, 26, 26, 0.65)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 158, 0, 0.18)',
+  borderRadius: '16px',
+}
 
 const lineData = [
   { name: 'Mon', FOOD: 12, MEDICAL: 19, SHELTER: 3 },
@@ -18,43 +29,59 @@ const donutData = [
   { name: 'MEDICAL', value: 45, color: '#C77DFF' },
   { name: 'FOOD', value: 30, color: '#FF9E00' },
   { name: 'SHELTER', value: 15, color: '#D9D9D9' },
-  { name: 'OTHER', value: 10, color: '#888888' },
+  { name: 'OTHER', value: 10, color: 'rgba(217,217,217,0.35)' },
 ]
 
 export function Analytics() {
   return (
     <PageWrapper>
-      <div className="flex flex-col gap-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-medium text-silver">Analytics</h1>
-          <div className="flex gap-4">
-            <Input type="date" className="w-40" />
-            <Input type="date" className="w-40" />
-            <Button variant="secondary">Export CSV</Button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+        {/* Page header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', letterSpacing: '-0.5px' }}>Analytics</h1>
+            <p style={{ fontSize: '14px', color: C.textMuted, marginTop: '4px' }}>Trends, ward performance and need breakdowns</p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <Input type="date" style={{ width: '160px', height: '38px' }} />
+            <Input type="date" style={{ width: '160px', height: '38px' }} />
+            <Button variant="secondary" style={{ height: '38px' }}>Export CSV</Button>
           </div>
         </div>
 
-        <Card className="p-6">
-          <h3 className="text-sm font-medium text-silver mb-6">Needs over time</h3>
-          <div className="h-[300px] w-full">
+        {/* Line chart */}
+        <div style={{ ...glassCard, padding: '24px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF', marginBottom: '20px' }}>Needs over time</h3>
+          <div style={{ height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid stroke="#FF9E00" strokeOpacity={0.1} />
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#2A2A2A', border: '1px solid #2E2E2E', borderRadius: '8px' }} />
+                <CartesianGrid stroke="rgba(255,158,0,0.08)" vertical={false} />
+                <XAxis dataKey="name" stroke="rgba(217,217,217,0.4)" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="rgba(217,217,217,0.4)" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(26,26,26,0.92)',
+                    border: '1px solid rgba(255,158,0,0.25)',
+                    borderRadius: '10px',
+                    color: '#D9D9D9',
+                  }}
+                />
                 <Line type="monotone" dataKey="FOOD" stroke="#FF9E00" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="MEDICAL" stroke="#C77DFF" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="SHELTER" stroke="#D9D9D9" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="p-6 flex flex-col items-center">
-             <h3 className="text-sm font-medium text-silver mb-6 w-full text-left">Needs by Category</h3>
-             <div className="h-[250px] w-full">
+        {/* Two-column lower section */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+
+          {/* Donut */}
+          <div style={{ ...glassCard, padding: '24px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF', marginBottom: '16px' }}>Needs by Category</h3>
+            <div style={{ height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -62,41 +89,80 @@ export function Analytics() {
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
+                    outerRadius={85}
+                    paddingAngle={4}
                     dataKey="value"
                     stroke="none"
                   >
-                    {donutData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {donutData.map((entry, i) => (
+                      <Cell key={`cell-${i}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#2A2A2A', border: '1px solid #2E2E2E', borderRadius: '8px' }} />
-                  <Legend />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(26,26,26,0.92)',
+                      border: '1px solid rgba(255,158,0,0.25)',
+                      borderRadius: '10px',
+                      color: '#D9D9D9',
+                    }}
+                  />
+                  <Legend
+                    formatter={(value) => (
+                      <span style={{ color: 'rgba(217,217,217,0.7)', fontSize: '12px' }}>{value}</span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-             </div>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="p-6">
-             <h3 className="text-sm font-medium text-silver mb-6">Ward Leaderboard</h3>
-             <div className="flex flex-col">
-                <div className="grid grid-cols-4 gap-4 pb-3 border-b border-charcoal-border text-[11px] font-semibold text-silver-muted uppercase">
-                  <span>Rank</span>
-                  <span>Ward</span>
-                  <span>Open Needs</span>
-                  <span>Top Issue</span>
-                </div>
-                {[1,2,3,4,5].map(rank => (
-                  <div key={rank} className="grid grid-cols-4 gap-4 py-3 border-b last:border-0 border-charcoal-border items-center">
-                    <span className="text-silver font-medium">#{rank}</span>
-                    <span className="text-silver text-sm">Ward {rank}</span>
-                    <span className="text-orange">{Math.floor(40/rank)}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-ghost text-violet border border-violet-border w-max">MEDICAL</span>
-                  </div>
+          {/* Ward leaderboard */}
+          <div style={{ ...glassCard, padding: '24px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 500, color: '#FFFFFF', marginBottom: '16px' }}>Ward Leaderboard</h3>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {/* Header */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '40px 1fr 80px 100px',
+                gap: '12px',
+                paddingBottom: '10px',
+                borderBottom: '1px solid rgba(255,158,0,0.1)',
+                marginBottom: '4px',
+              }}>
+                {['Rank', 'Ward', 'Open', 'Top Issue'].map(h => (
+                  <span key={h} style={{ fontSize: '11px', color: 'rgba(217,217,217,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+                    {h}
+                  </span>
                 ))}
-             </div>
-          </Card>
+              </div>
+              {[1, 2, 3, 4, 5].map(rank => (
+                <div key={rank} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '40px 1fr 80px 100px',
+                  gap: '12px',
+                  padding: '10px 0',
+                  borderBottom: rank < 5 ? '1px solid rgba(255,158,0,0.06)' : 'none',
+                  alignItems: 'center',
+                }}>
+                  <span style={{ color: C.orange, fontWeight: 500, fontSize: '14px' }}>#{rank}</span>
+                  <span style={{ color: C.silver, fontSize: '14px' }}>Ward {rank}</span>
+                  <span style={{ color: C.orange, fontSize: '14px' }}>{Math.floor(40 / rank)}</span>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    background: C.violetGhost,
+                    color: C.violet,
+                    border: `1px solid ${C.violetBorder}`,
+                    letterSpacing: '0.04em',
+                    width: 'max-content',
+                  }}>
+                    MEDICAL
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </PageWrapper>
