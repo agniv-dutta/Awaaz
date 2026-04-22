@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react'
 import { AnimatePresence } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { VolunteerCard } from '../components/volunteers/VolunteerCard'
 import { useVolunteers } from '../hooks/useVolunteers'
 import type { Volunteer } from '../types'
+import { getVolunteerInsight } from '../services/gemini'
 
 // Extend Volunteer for mock data as the name is stored in User table in DB
 interface VolunteerWithUser extends Volunteer {
@@ -13,6 +14,15 @@ interface VolunteerWithUser extends Volunteer {
   initials: string;
   available: boolean;
   distance: string;
+}
+
+type MockNeed = {
+  id: string;
+  category: string;
+  urgency: string;
+  description: string;
+  ward: string;
+  reportCount: number;
 }
 
 const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
@@ -192,6 +202,41 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
   },
 ]
 
+const MOCK_NEEDS: MockNeed[] = [
+  {
+    id: 'n1',
+    category: 'MEDICAL',
+    urgency: 'CRITICAL',
+    description: 'Elderly residents need urgent mobile health support and medicines.',
+    ward: 'Dharavi Ward',
+    reportCount: 38,
+  },
+  {
+    id: 'n2',
+    category: 'FOOD',
+    urgency: 'HIGH',
+    description: 'Ration kits required for 200+ families affected by supply disruption.',
+    ward: 'Kurla East Ward',
+    reportCount: 24,
+  },
+  {
+    id: 'n3',
+    category: 'SHELTER',
+    urgency: 'HIGH',
+    description: 'Temporary shelter support needed after flooding in low-lying areas.',
+    ward: 'Govandi Ward',
+    reportCount: 18,
+  },
+  {
+    id: 'n4',
+    category: 'EDUCATION',
+    urgency: 'MEDIUM',
+    description: 'School supplies and mentoring support needed for displaced children.',
+    ward: 'Mankhurd Ward',
+    reportCount: 12,
+  },
+]
+
 const allSkills = ['MEDICAL', 'LOGISTICS', 'TEACHING', 'COOKING', 'LEGAL', 'TRANSLATION']
 
 export function Volunteers() {
@@ -199,6 +244,9 @@ export function Volunteers() {
   const [search, setSearch] = useState('')
   const [activeSkills, setActiveSkills] = useState<string[]>([])
   const [selectedVol, setSelectedVol] = useState<VolunteerWithUser | null>(null)
+  const [geminiInsight, setGeminiInsight] = useState<string | null>(null)
+  const [geminiLoading, setGeminiLoading] = useState(false)
+  const hasGeminiKey = Boolean((import.meta.env.VITE_GEMINI_API_KEY || '').trim())
 
   const toggleSkill = (skill: string) => {
     setActiveSkills(prev =>
@@ -207,13 +255,74 @@ export function Volunteers() {
   }
 
   const list = useMemo(() => {
-    const dataSource = volunteers && volunteers.length > 0 ? (volunteers as VolunteerWithUser[]) : MOCK_VOLUNTEERS
-    return dataSource.filter(v => {
+    const fromApi: VolunteerWithUser[] = (volunteers || []).map((v, index) => {
+      const wardMap: Record<string, string> = {
+        '1': 'Dharavi Ward',
+        '2': 'Kurla East Ward',
+        '3': 'Govandi Ward',
+        '4': 'Mankhurd Ward',
+        '5': 'Bandra West Ward',
+      }
+      const sourceName = (v as any).name || `Volunteer ${index + 1}`
+      const initials = sourceName.split(' ').map((part: string) => part[0]).join('').slice(0, 2).toUpperCase()
+      return {
+        ...(v as Volunteer),
+        name: sourceName,
+        ward: wardMap[(v as Volunteer).home_ward_id] || `Ward ${(v as Volunteer).home_ward_id}`,
+        initials,
+        available: Boolean((v as Volunteer).is_active),
+        distance: `${(Math.random() * 2 + 0.5).toFixed(1)} km`,
+      }
+    })
+
+    const dataSource = fromApi.length > 0 ? fromApi : MOCK_VOLUNTEERS
+    return dataSource.filter((v) => {
       const matchSearch = (v.name || '').toLowerCase().includes(search.toLowerCase())
       const matchSkills = activeSkills.length === 0 || activeSkills.some(s => v.skills.includes(s))
       return matchSearch && matchSkills
     })
   }, [volunteers, search, activeSkills])
+
+  useEffect(() => {
+    if (!selectedVol) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedVol(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedVol])
+
+  useEffect(() => {
+    if (!selectedVol) {
+      setGeminiInsight(null)
+      setGeminiLoading(false)
+      return
+    }
+
+    if (!hasGeminiKey) {
+      setGeminiInsight(null)
+      setGeminiLoading(false)
+      return
+    }
+
+    const wardNeeds = MOCK_NEEDS.filter((need) => need.ward === selectedVol.ward)
+    setGeminiLoading(true)
+    getVolunteerInsight(selectedVol as any, wardNeeds)
+      .then((insight) => {
+        setGeminiInsight(insight)
+        setGeminiLoading(false)
+      })
+      .catch(() => {
+        setGeminiInsight(null)
+        setGeminiLoading(false)
+      })
+  }, [selectedVol, hasGeminiKey])
 
   return (
     <PageWrapper noPadding>
@@ -297,8 +406,8 @@ export function Volunteers() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
                   {[1, 2, 3].map(i => <div key={i} style={{ width: i === 2 ? '10px' : '8px', height: i === 2 ? '10px' : '8px', borderRadius: '50%', background: '#FF9E00' }} />)}
                 </div>
-                <div style={{ fontSize: '18px', color: '#D9D9D9', fontWeight: 500 }}>No results found</div>
-                <div style={{ fontSize: '14px', color: 'rgba(217, 217, 217, 0.45)', marginTop: '4px' }}>Try adjusting your search or filters</div>
+                <div style={{ fontSize: '18px', color: '#D9D9D9', fontWeight: 500 }}>No volunteers match your filters.</div>
+                <div style={{ fontSize: '14px', color: 'rgba(217, 217, 217, 0.45)', marginTop: '4px' }}>Try adjusting skills or search terms</div>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', paddingBottom: '32px' }}>
@@ -317,45 +426,83 @@ export function Volunteers() {
         {/* Fixed right detail drawer */}
         <AnimatePresence>
           {selectedVol && (
-            <div style={{
-              position: 'fixed',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '420px',
-              background: 'rgba(15, 10, 5, 0.97)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              borderLeft: '1px solid rgba(255, 158, 0, 0.2)',
-              zIndex: 50,
-              overflowY: 'auto',
-              padding: '28px 28px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '24px',
-            }}>
-              {/* Close button */}
-              <button
+            <>
+              <div
                 onClick={() => setSelectedVol(null)}
                 style={{
-                  position: 'absolute',
-                  top: '20px',
-                  right: '20px',
-                  background: 'rgba(255, 158, 0, 0.1)',
-                  border: '1px solid rgba(255, 158, 0, 0.2)',
-                  borderRadius: '8px',
-                  color: '#D9D9D9',
-                  padding: '6px 12px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontFamily: 'inherit',
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 199,
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  backdropFilter: 'blur(2px)',
+                  WebkitBackdropFilter: 'blur(2px)',
                 }}
-              >
-                ✕ Close
-              </button>
+              />
 
-              {/* Volunteer header with avatar */}
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '8px' }}>
+              <div style={{
+                position: 'fixed',
+                right: 0,
+                top: 0,
+                height: '100vh',
+                width: '420px',
+                overflowY: 'auto',
+                zIndex: 200,
+                background: 'rgba(12, 8, 4, 0.97)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                borderLeft: '1px solid rgba(255, 158, 0, 0.2)',
+                display: 'flex',
+                flexDirection: 'column',
+                padding: 0,
+              }}>
+                {/* Section 1 - sticky header */}
+                <div style={{
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                  height: '56px',
+                  background: 'rgba(12, 8, 4, 0.98)',
+                  borderBottom: '1px solid rgba(255, 158, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0 20px',
+                }}>
+                  <div style={{ fontSize: '16px', color: '#FFFFFF', fontWeight: 500 }}>
+                    {selectedVol.name}
+                  </div>
+                  <button
+                    onClick={() => setSelectedVol(null)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#D9D9D9',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      lineHeight: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 158, 0, 0.12)'
+                      e.currentTarget.style.color = '#FF9E00'
+                      e.currentTarget.style.borderColor = 'rgba(255, 158, 0, 0.3)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'
+                      e.currentTarget.style.color = '#D9D9D9'
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Section 2 - scrollable content */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* Volunteer header with avatar */}
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                 <div style={{
                   width: '60px',
                   height: '60px',
@@ -389,10 +536,10 @@ export function Volunteers() {
                     </span>
                   </div>
                 </div>
-              </div>
+                  </div>
 
-              {/* Skills section */}
-              <div>
+                  {/* Skills section */}
+                  <div>
                 <div style={{
                   fontSize: '11px',
                   color: '#D9D9D9',
@@ -417,10 +564,10 @@ export function Volunteers() {
                     </span>
                   ))}
                 </div>
-              </div>
+                  </div>
 
-              {/* Weekly availability schedule */}
-              <div>
+                  {/* Weekly availability schedule */}
+                  <div>
                 <div style={{
                   fontSize: '11px',
                   color: '#D9D9D9',
@@ -473,10 +620,10 @@ export function Volunteers() {
                     )
                   })}
                 </div>
-              </div>
+                  </div>
 
-              {/* Stats row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  {/* Stats row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 {[
                   { label: 'Tasks done', value: selectedVol.completed_tasks },
                   { label: 'Reliability', value: Math.round(selectedVol.reliability_score * 100) + '%' },
@@ -504,46 +651,113 @@ export function Volunteers() {
                     </div>
                   </div>
                 ))}
-              </div>
+                  </div>
 
-              {/* Action buttons */}
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                marginTop: 'auto',
-                paddingTop: '16px',
-                borderTop: '1px solid rgba(255, 158, 0, 0.12)',
-              }}>
-                <button style={{
-                  flex: 1,
-                  height: '46px',
-                  background: 'transparent',
-                  border: '1px solid rgba(217, 217, 217, 0.2)',
-                  borderRadius: '10px',
-                  color: '#D9D9D9',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  fontWeight: 500,
+                  {/* Task history */}
+                  <div>
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#D9D9D9',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      marginBottom: '10px',
+                    }}>
+                      Recent Task History
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {[
+                        `Completed ${selectedVol.skills[0] || 'community'} support in ${selectedVol.ward}`,
+                        'Reached beneficiary cluster within response SLA',
+                        'Follow-up completed with local coordinator',
+                      ].map((item, idx) => (
+                        <div key={idx} style={{
+                          fontSize: '12px',
+                          color: 'rgba(217, 217, 217, 0.75)',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          borderRadius: '8px',
+                          padding: '8px 10px',
+                        }}>
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Gemini AI insight */}
+                  <div style={{
+                    background: 'rgba(199, 125, 255, 0.06)',
+                    border: '1px solid rgba(199, 125, 255, 0.2)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginTop: '4px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                      <div style={{ width: '18px', height: '18px' }}>
+                        <svg viewBox="0 0 18 18" fill="none">
+                          <path d="M9 2 L10.5 7.5 L16 9 L10.5 10.5 L9 16 L7.5 10.5 L2 9 L7.5 7.5 Z" fill="#C77DFF"/>
+                        </svg>
+                      </div>
+                      <span style={{ fontSize: '12px', color: '#C77DFF', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>
+                        Gemini AI insight
+                      </span>
+                    </div>
+                    {geminiLoading ? (
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C77DFF', animation: 'pulse-dot 1s ease infinite' }}/>
+                        <span style={{ fontSize: '13px', color: 'rgba(199,125,255,0.6)' }}>Analyzing volunteer profile...</span>
+                      </div>
+                    ) : geminiInsight ? (
+                      <p style={{ fontSize: '13px', color: '#D9D9D9', lineHeight: 1.6, margin: 0 }}>{geminiInsight}</p>
+                    ) : (
+                      <p style={{ fontSize: '12px', color: 'rgba(217,217,217,0.35)', margin: 0 }}>
+                        Add VITE_GEMINI_API_KEY to .env to enable AI insights
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 3 - sticky footer */}
+                <div style={{
+                  position: 'sticky',
+                  bottom: 0,
+                  background: 'rgba(12, 8, 4, 0.98)',
+                  borderTop: '1px solid rgba(255, 158, 0, 0.1)',
+                  padding: '16px 20px',
                 }}>
-                  Contact
-                </button>
-                <button style={{
-                  flex: 2,
-                  height: '46px',
-                  background: '#FF9E00',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: '#1A1A1A',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}>
-                  Assign to Need →
-                </button>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button style={{
+                      flex: 1,
+                      height: '46px',
+                      background: 'transparent',
+                      border: '1px solid rgba(217, 217, 217, 0.2)',
+                      borderRadius: '10px',
+                      color: '#D9D9D9',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontWeight: 500,
+                    }}>
+                      Contact
+                    </button>
+                    <button style={{
+                      flex: 2,
+                      height: '46px',
+                      background: '#FF9E00',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: '#1A1A1A',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}>
+                      Assign to Need →
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </AnimatePresence>
       </div>

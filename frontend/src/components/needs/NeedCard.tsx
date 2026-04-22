@@ -1,13 +1,24 @@
 import type { Need } from '../../types'
 import { C } from '../../utils/colors'
 import { Badge } from '../ui/Badge'
+import { CATEGORY_LABELS, URGENCY_LABELS } from '../../utils/labels'
 
 interface NeedCardProps {
-  need: Need
+  need: Need & { ward_name?: string }
   onDispatch?: (needId: string) => void
+  weatherCondition?: 'clear' | 'rain' | 'extreme_heat' | 'flood_risk' | 'storm'
 }
 
-export function NeedCard({ need, onDispatch }: NeedCardProps) {
+export function NeedCard({ need, onDispatch, weatherCondition = 'clear' }: NeedCardProps) {
+  const displayWard = (wardName: string) => {
+    if (wardName && wardName.length === 36 && wardName.includes('-')) {
+      return 'Mumbai Ward'
+    }
+    return wardName || 'Mumbai Ward'
+  }
+
+  const shouldPulseShelter = (weatherCondition === 'rain' || weatherCondition === 'storm') && need.category === 'SHELTER'
+
   const urgencyColor =
     need.urgency === 'CRITICAL' ? C.orange :
     need.urgency === 'HIGH' ? C.orangeDark :
@@ -31,39 +42,48 @@ export function NeedCard({ need, onDispatch }: NeedCardProps) {
         WebkitBackdropFilter: 'blur(16px)',
         border: '1px solid rgba(255, 158, 0, 0.18)',
         borderLeft: `4px solid ${urgencyColor}`,
-        borderRadius: '16px',
+        borderRadius: '12px',
         borderTopLeftRadius: 0,
         borderBottomLeftRadius: 0,
-        padding: '14px 20px',
+        height: '72px',
+        padding: '0 20px',
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
+        animation: shouldPulseShelter ? 'pulse-border 1.6s ease-in-out infinite' : undefined,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(255,158,0,0.35)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(255,158,0,0.18)'
       }}
     >
       {/* Left: badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', flexShrink: 0 }}>
         {/* Category badge */}
         <Badge variant={isSilver ? 'silver' : isViolet ? 'medium' : 'processed'}>
-          {need.category}
+          {CATEGORY_LABELS[need.category] || need.category}
         </Badge>
 
         {/* Urgency badge */}
         <Badge variant={badgeVariant}>
-          {need.urgency}
+          {URGENCY_LABELS[need.urgency] || need.urgency}
         </Badge>
       </div>
 
       {/* Center: ward name */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <span style={{ fontSize: '15px', fontWeight: 500, color: '#FFFFFF' }}>
-          Ward {need.ward_id}
+          {displayWard((need as any).ward_name || need.ward_id)}
         </span>
         <span style={{ 
           fontSize: '13px', 
           color: '#D9D9D9', 
           overflow: 'hidden', 
           textOverflow: 'ellipsis', 
-          whiteSpace: 'nowrap' 
+          whiteSpace: 'nowrap',
+          display: 'block'
         }}>
           {need.description}
         </span>

@@ -1,0 +1,15 @@
+{
+  "name": "Awaaz — Community Intelligence",
+  "short_name": "Awaaz",
+  "description": "Giving communities a voice through smart needs aggregation and volunteer dispatch",
+  "theme_color": "#FF9E00",
+  "background_color": "#1A1A1A",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,296 +1,375 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper'
-import { Button } from '../components/ui/Button'
-import { Spinner } from '../components/ui/Spinner'
-import { UploadCloud } from 'lucide-react'
-import { C } from '../utils/colors'
+import { analyzeReportText } from '../services/gemini'
+import { detectAndTranslate } from '../services/translate'
+import { CATEGORY_LABELS, URGENCY_LABELS } from '../utils/labels'
+import { EmptyState } from '../components/ui/EmptyState'
+import { useIsMobile } from '../hooks/useIsMobile'
 
-const glassCard: React.CSSProperties = {
-  background: 'rgba(26, 26, 26, 0.65)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255, 158, 0, 0.18)',
-  borderRadius: '16px',
+type ReportItem = {
+  id: string
+  text: string
+  category: string
+  urgency: string
+  area: string
+  time: string
+  reporter: string
 }
 
-const tabBase: React.CSSProperties = {
-  paddingBottom: '10px',
-  paddingLeft: '4px',
-  paddingRight: '4px',
-  fontSize: '14px',
-  fontWeight: 500,
-  background: 'none',
-  border: 'none',
-  borderBottom: '2px solid transparent',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-  transition: 'all 0.15s',
+const MOCK_REPORTS: ReportItem[] = [
+  {
+    id: 'RPT-201',
+    text: 'Heavy waterlogging near lane 4. Elderly residents need transport to clinic.',
+    category: 'MEDICAL',
+    urgency: 'HIGH',
+    area: 'Dharavi Ward',
+    time: '10m ago',
+    reporter: 'Community volunteer',
+  },
+  {
+    id: 'RPT-202',
+    text: 'Two families displaced after wall collapse. Need temporary shelter and blankets.',
+    category: 'SHELTER',
+    urgency: 'CRITICAL',
+    area: 'Kurla East Ward',
+    time: '22m ago',
+    reporter: 'Resident call-in',
+  },
+  {
+    id: 'RPT-203',
+    text: 'Ration kits running out in flood camp B. Children need food packets.',
+    category: 'FOOD',
+    urgency: 'HIGH',
+    area: 'Govandi Ward',
+    time: '45m ago',
+    reporter: 'NGO partner',
+  },
+]
+
+const glassCard: React.CSSProperties = {
+  background: 'rgba(26, 26, 26, 0.72)',
+  border: '1px solid rgba(255, 158, 0, 0.18)',
+  borderRadius: '16px',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
 }
 
 export function Reports() {
-  const [activeTab, setActiveTab] = useState<'submit' | 'ocr' | 'browse'>('submit')
+  const isMobile = useIsMobile(980)
+  const [activeTab, setActiveTab] = useState<'submit' | 'browse'>('submit')
+  const [description, setDescription] = useState('')
+  const [detectedLanguage, setDetectedLanguage] = useState('')
+  const [originalDescription, setOriginalDescription] = useState('')
+  const [wasTranslated, setWasTranslated] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysis, setAnalysis] = useState<{ category: string; urgency: string; summary: string } | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  return (
-    <PageWrapper>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '860px' }}>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', letterSpacing: '-0.5px' }}>Reports</h1>
-          <p style={{ fontSize: '15px', color: '#D9D9D9', marginTop: '4px' }}>Submit and browse community need reports</p>
-        </div>
+  const hasGeminiKey = Boolean((import.meta.env.VITE_GEMINI_API_KEY || '').trim())
 
-        {/* Tab bar */}
-        <div style={{ display: 'flex', gap: '20px', borderBottom: '1px solid rgba(255,158,0,0.12)', paddingBottom: '0' }}>
-          {(['submit', 'ocr', 'browse'] as const).map(tab => {
-            const labels = { submit: 'Submit Report', ocr: 'Upload Document', browse: 'Browse Past' }
-            const isActive = activeTab === tab
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  ...tabBase,
-                  color: isActive ? C.orange : 'rgba(217,217,217,0.55)',
-                  borderBottomColor: isActive ? C.orange : 'transparent',
-                }}
-              >
-                {labels[tab]}
-              </button>
-            )
-          })}
-        </div>
+  const recentReports = useMemo(() => MOCK_REPORTS.slice(0, 3), [])
 
-        {activeTab === 'submit' && <SubmitTab />}
-        {activeTab === 'ocr' && <OCRTab />}
-        {activeTab === 'browse' && <BrowseTab />}
-      </div>
-    </PageWrapper>
-  )
-}
+  const onDescriptionBlur = async () => {
+    const value = description.trim()
+    if (!value) return
 
-function SubmitTab() {
-  const categories = ['FOOD', 'MEDICAL', 'SHELTER', 'EDUCATION', 'LEGAL', 'MENTAL_HEALTH', 'ELDERLY_CARE', 'OTHER']
-  const [selectedCat, setSelectedCat] = useState('MEDICAL')
-  const [urgency, setUrgency] = useState('HIGH')
+    const result = await detectAndTranslate(value)
+    setDetectedLanguage(result.detectedLanguage)
 
-  const urgencyColors: Record<string, string> = {
-    CRITICAL: C.orange,
-    HIGH: C.orangeDark,
-    MEDIUM: C.violet,
-    LOW: 'rgba(217,217,217,0.4)',
+    if (result.wasTranslated) {
+      setOriginalDescription(result.originalText)
+      setDescription(result.translatedText)
+      setWasTranslated(true)
+    } else {
+      setWasTranslated(false)
+      setOriginalDescription('')
+    }
+  }
+
+  const restoreOriginal = () => {
+    if (!originalDescription) return
+    setDescription(originalDescription)
+    setWasTranslated(false)
+  }
+
+  const runAiAnalyze = async () => {
+    if (!hasGeminiKey || !description.trim()) return
+
+    setAnalyzing(true)
+    try {
+      const result = await analyzeReportText(description)
+      if (result) {
+        setAnalysis({
+          category: result.category,
+          urgency: result.urgency,
+          summary: result.summary,
+        })
+      }
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const submitReport = async () => {
+    setSubmitting(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      setDescription('')
+      setAnalysis(null)
+      setDetectedLanguage('')
+      setOriginalDescription('')
+      setWasTranslated(false)
+      setActiveTab('browse')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
-    <div style={{ ...glassCard, padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Category chips */}
-      <div>
-        <label style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>
-          Category
-        </label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCat(cat)}
-              style={{
-                padding: '10px 12px',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: 500,
-                letterSpacing: '0.04em',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.15s',
-                background: selectedCat === cat ? 'rgba(255,158,0,0.15)' : 'rgba(255,158,0,0.05)',
-                border: `1px solid ${selectedCat === cat ? 'rgba(255,158,0,0.5)' : 'rgba(255,158,0,0.15)'}`,
-                color: selectedCat === cat ? C.orange : 'rgba(217,217,217,0.6)',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
+    <PageWrapper>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : 0 }}>
+          <div>
+            <h1 style={{ fontSize: '28px', color: '#FFFFFF', fontWeight: 500 }}>Community Reports</h1>
+            <p style={{ fontSize: '14px', color: '#D9D9D9', marginTop: '4px' }}>
+              Submit and review multilingual reports from affected neighborhoods.
+            </p>
+          </div>
 
-      {/* Description */}
-      <div>
-        <label style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-          Description
-        </label>
-        <textarea
-          placeholder="Describe the need..."
-          rows={4}
-          style={{
-            width: '100%',
-            background: 'rgba(26,26,26,0.6)',
-            border: '1px solid rgba(255,158,0,0.2)',
-            borderRadius: '8px',
-            color: '#FFFFFF',
-            padding: '12px',
-            fontSize: '14px',
-            fontFamily: 'inherit',
-            outline: 'none',
-            resize: 'vertical',
-          }}
-          onFocus={e => (e.currentTarget.style.borderColor = '#FF9E00')}
-          onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,158,0,0.2)')}
-        />
-      </div>
-
-      {/* Ward + Urgency row */}
-      <div style={{ display: 'flex', gap: '24px' }}>
-        <div style={{ flex: 1 }}>
-          <label style={{ fontSize: '11px', color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Ward</label>
-          <select style={{
-            width: '100%',
-            height: '40px',
-            background: 'rgba(26,26,26,0.6)',
-            border: '1px solid rgba(255,158,0,0.2)',
-            borderRadius: '8px',
-            color: '#FFFFFF',
-            padding: '0 12px',
-            fontSize: '14px',
-            fontFamily: 'inherit',
-            outline: 'none',
-          }}>
-            <option>Ward 1 - Dharavi</option>
-            <option>Ward 2 - Kurla</option>
-            <option>Ward 3 - Govandi</option>
-          </select>
-        </div>
-        <div style={{ flex: 1 }}>
-          <label style={{ fontSize: '11px', color: 'rgba(217,217,217,0.55)', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Urgency</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(u => (
+          <div style={{ display: 'inline-flex', border: '1px solid rgba(217,217,217,0.2)', borderRadius: '10px', overflow: 'hidden' }}>
+            {[
+              { key: 'submit', label: 'Submit' },
+              { key: 'browse', label: 'Browse' },
+            ].map((tab) => (
               <button
-                key={u}
-                onClick={() => setUrgency(u)}
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as 'submit' | 'browse')}
                 style={{
-                  flex: 1,
-                  padding: '8px 4px',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
+                  border: 'none',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  transition: 'all 0.15s',
-                  background: urgency === u ? urgencyColors[u] + '22' : 'transparent',
-                  border: `1px solid ${urgency === u ? urgencyColors[u] : 'rgba(255,158,0,0.2)'}`,
-                  color: urgency === u ? urgencyColors[u] : 'rgba(217,217,217,0.55)',
+                  fontSize: '13px',
+                  padding: '8px 14px',
+                  color: activeTab === tab.key ? '#1A1A1A' : '#D9D9D9',
+                  background: activeTab === tab.key ? '#D9D9D9' : 'transparent',
                 }}
               >
-                {u}
+                {tab.label}
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      <Button variant="primary" style={{ alignSelf: 'flex-start', padding: '11px 28px' }}>
-        Submit Report
-      </Button>
-    </div>
-  )
-}
+        {activeTab === 'submit' ? (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 58%) minmax(0, 42%)', gap: '20px' }}>
+            <div style={{ ...glassCard, padding: '18px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <label style={{ fontSize: '12px', color: '#D9D9D9', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Report Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onBlur={onDescriptionBlur}
+                  rows={9}
+                  placeholder="Describe the situation in as much detail as possible..."
+                  style={{
+                    width: '100%',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(217,217,217,0.26)',
+                    background: 'rgba(255,255,255,0.02)',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    lineHeight: 1.6,
+                    padding: '12px 14px',
+                    outline: 'none',
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                  }}
+                />
 
-function OCRTab() {
-  const [isHover, setIsHover] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [text, setText] = useState('')
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(217,217,217,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Language
+                  </span>
+                  {['auto', 'en', 'hi', 'mr', 'gu'].map((lang) => {
+                    const active = (detectedLanguage || 'auto').toLowerCase() === lang
+                    return (
+                      <span
+                        key={lang}
+                        style={{
+                          fontSize: '11px',
+                          padding: '4px 10px',
+                          borderRadius: '999px',
+                          border: `1px solid ${active ? '#C77DFF' : 'rgba(217,217,217,0.25)'}`,
+                          color: active ? '#C77DFF' : '#D9D9D9',
+                        }}
+                      >
+                        {lang.toUpperCase()}
+                      </span>
+                    )
+                  })}
+                </div>
 
-  const handleSimulate = () => {
-    setIsProcessing(true)
-    setTimeout(() => {
-      setIsProcessing(false)
-      setText('Extracted: Needs 50 blankets and medical supply kit near main crossroad.')
-    }, 2000)
-  }
+                {wasTranslated && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      border: '1px solid rgba(199,125,255,0.35)',
+                      background: 'rgba(199,125,255,0.09)',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px',
+                    }}
+                  >
+                    <span style={{ fontSize: '12px', color: '#D9D9D9' }}>Translated to English for consistent triage.</span>
+                    <button
+                      onClick={restoreOriginal}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#C77DFF',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        textDecoration: 'underline',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Revert to original
+                    </button>
+                  </motion.div>
+                )}
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div
-        style={{
-          width: '100%',
-          height: '240px',
-          border: `2px dashed ${isHover ? C.orange : 'rgba(255,158,0,0.35)'}`,
-          borderRadius: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          cursor: 'pointer',
-          background: isHover ? 'rgba(255,158,0,0.05)' : 'transparent',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={() => setIsHover(true)}
-        onMouseLeave={() => setIsHover(false)}
-        onClick={handleSimulate}
-      >
-        {isProcessing ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <Spinner />
-            <span style={{ color: C.orange, fontWeight: 500 }}>Extracting needs...</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={runAiAnalyze}
+                    disabled={!hasGeminiKey || analyzing || !description.trim()}
+                    style={{
+                      borderRadius: '10px',
+                      border: '1px solid rgba(199,125,255,0.35)',
+                      background: 'rgba(199,125,255,0.12)',
+                      color: '#C77DFF',
+                      cursor: !hasGeminiKey || analyzing || !description.trim() ? 'not-allowed' : 'pointer',
+                      padding: '10px 14px',
+                      fontSize: '13px',
+                      opacity: hasGeminiKey ? 1 : 0.55,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {analyzing ? 'Analyzing...' : 'Analyze with Gemini'}
+                  </button>
+
+                  <button
+                    onClick={submitReport}
+                    disabled={submitting || !description.trim()}
+                    style={{
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255,158,0,0.45)',
+                      background: '#FF9E00',
+                      color: '#1A1A1A',
+                      cursor: submitting || !description.trim() ? 'not-allowed' : 'pointer',
+                      padding: '10px 16px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      opacity: submitting || !description.trim() ? 0.6 : 1,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+
+                {!hasGeminiKey && (
+                  <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.55)' }}>
+                    Add VITE_GEMINI_API_KEY to enable AI categorization.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ ...glassCard, padding: '16px' }}>
+                <h3 style={{ fontSize: '15px', color: '#FFFFFF', marginBottom: '10px', fontWeight: 500 }}>
+                  AI Analysis
+                </h3>
+                {analysis ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '12px', color: '#D9D9D9' }}>
+                      Category: <strong style={{ color: '#FFFFFF' }}>{CATEGORY_LABELS[analysis.category] || analysis.category}</strong>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#D9D9D9' }}>
+                      Urgency: <strong style={{ color: '#FFFFFF' }}>{URGENCY_LABELS[analysis.urgency] || analysis.urgency}</strong>
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.82)', lineHeight: 1.6, marginTop: '4px' }}>
+                      {analysis.summary}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.52)' }}>
+                    Run Gemini analysis to auto-tag this report.
+                  </div>
+                )}
+              </div>
+
+              <div style={{ ...glassCard, padding: '16px' }}>
+                <h3 style={{ fontSize: '15px', color: '#FFFFFF', marginBottom: '10px', fontWeight: 500 }}>
+                  Recent Community Reports
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {recentReports.map((item) => (
+                    <div key={item.id} style={{ border: '1px solid rgba(217,217,217,0.15)', borderRadius: '10px', padding: '10px 12px', background: 'rgba(255,255,255,0.015)' }}>
+                      <div style={{ fontSize: '12px', color: '#FFFFFF', marginBottom: '6px' }}>{item.text}</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(217,217,217,0.58)' }}>
+                        {item.area} - {item.time}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          <>
-            <UploadCloud style={{ width: '48px', height: '48px', color: C.orange, opacity: 0.5, marginBottom: '12px' }} />
-            <span style={{ color: '#D9D9D9', fontWeight: 500 }}>Drop PDF or image here</span>
-            <span style={{ color: C.textMuted, fontSize: '13px', marginTop: '4px' }}>.pdf, .jpg, .png</span>
-          </>
+          <div style={{ ...glassCard, overflowX: 'auto' }}>
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px' }}>
+                {MOCK_REPORTS.map((item) => (
+                  <div key={item.id} style={{ border: '1px solid rgba(255,158,0,0.12)', borderRadius: '10px', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '13px', color: '#D9D9D9', lineHeight: 1.5 }}>{item.text}</div>
+                    <div style={{ fontSize: '12px', color: '#FFFFFF', marginTop: '8px' }}>{CATEGORY_LABELS[item.category] || item.category} - {URGENCY_LABELS[item.urgency] || item.urgency}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(217,217,217,0.8)', marginTop: '4px' }}>{item.area}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '14px', padding: '12px 16px', borderBottom: '1px solid rgba(255,158,0,0.12)', background: 'rgba(255,158,0,0.07)' }}>
+                  {['Report', 'Category', 'Urgency', 'Area'].map((h) => (
+                    <span key={h} style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{h}</span>
+                  ))}
+                </div>
+
+                {MOCK_REPORTS.length === 0 ? (
+                  <EmptyState emptyMessage="No reports submitted yet. As soon as residents submit reports, they will appear here." />
+                ) : (
+                  MOCK_REPORTS.map((item) => (
+                    <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '14px', padding: '12px 16px', borderBottom: '1px solid rgba(255,158,0,0.08)' }}>
+                      <div style={{ fontSize: '13px', color: '#D9D9D9' }}>{item.text}</div>
+                      <div style={{ fontSize: '12px', color: '#FFFFFF' }}>{CATEGORY_LABELS[item.category] || item.category}</div>
+                      <div style={{ fontSize: '12px', color: '#FFFFFF' }}>{URGENCY_LABELS[item.urgency] || item.urgency}</div>
+                      <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.8)' }}>{item.area}</div>
+                    </div>
+                  ))
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      {text && (
-        <div style={{ ...glassCard, padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label style={{ fontSize: '13px', fontWeight: 500, color: '#D9D9D9' }}>Extracted Content</label>
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            rows={3}
-            style={{
-              width: '100%',
-              background: 'rgba(26,26,26,0.6)',
-              border: '1px solid rgba(255,158,0,0.2)',
-              borderRadius: '8px',
-              color: '#FFFFFF',
-              padding: '12px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              outline: 'none',
-              resize: 'vertical',
-            }}
-          />
-          <Button variant="primary" style={{ alignSelf: 'flex-start' }}>Confirm &amp; Submit</Button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function BrowseTab() {
-  const statuses = ['PENDING', 'PROCESSED', 'FLAGGED']
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {[1, 2, 3].map(i => (
-        <div key={i} style={{ ...glassCard, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ color: '#D9D9D9', fontSize: '14px', fontWeight: 500 }}>Report #{i}293</span>
-            <span style={{ color: C.textMuted, fontSize: '12px' }}>Today at {9 + i}:45 AM · Ward {i}</span>
-          </div>
-          <span style={{
-            fontSize: '10px',
-            padding: '3px 10px',
-            borderRadius: '20px',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            border: `1px solid ${i === 1 ? 'rgba(255,158,0,0.35)' : i === 2 ? C.violetBorder : 'rgba(217,217,217,0.25)'}`,
-            color: i === 1 ? C.orange : i === 2 ? C.violet : 'rgba(217,217,217,0.5)',
-            background: i === 1 ? C.orangeGhost : i === 2 ? C.violetGhost : 'transparent',
-          }}>
-            {statuses[i - 1]}
-          </span>
-        </div>
-      ))}
-    </div>
+    </PageWrapper>
   )
 }

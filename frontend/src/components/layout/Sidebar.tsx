@@ -29,7 +29,7 @@ export function Sidebar() {
   const isDark = sidebarMode === 'dark'
   const bgColor = isDark ? 'rgba(15, 10, 5, 0.92)' : '#D9D9D9'
   const borderColor = isDark ? 'rgba(255, 158, 0, 0.15)' : 'rgba(0, 0, 0, 0.1)'
-  const textMuted = isDark ? 'rgba(217, 217, 217, 0.55)' : 'rgba(26, 26, 26, 0.55)'
+  const textMuted = isDark ? '#D9D9D9' : 'rgba(26, 26, 26, 0.55)'
   const activeItemBg = isDark ? 'rgba(255, 158, 0, 0.15)' : 'rgba(26, 26, 26, 0.12)'
   const activeItemColor = isDark ? '#FF9E00' : '#1A1A1A'
   const hoverBg = isDark ? 'rgba(255, 158, 0, 0.08)' : 'rgba(26, 26, 26, 0.08)'

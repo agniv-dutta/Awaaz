@@ -9,10 +9,19 @@ interface VolunteerCardProps {
 
 export function VolunteerCard({ volunteer, onClick }: VolunteerCardProps) {
   const name = (volunteer as any).name || 'Volunteer'
+  const wardLabel = (volunteer as any).ward || `Ward ${volunteer.home_ward_id}`
 
   return (
     <div
       onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(255,158,0,0.42)'
+        e.currentTarget.style.transform = 'translateY(-2px)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(255,158,0,0.18)'
+        e.currentTarget.style.transform = 'translateY(0)'
+      }}
       className="glass-card"
       style={{
         background: 'rgba(26,26,26,0.65)',
@@ -26,6 +35,7 @@ export function VolunteerCard({ volunteer, onClick }: VolunteerCardProps) {
         gap: '16px',
         cursor: 'pointer',
         position: 'relative',
+        transition: 'transform 0.15s ease, border-color 0.15s ease',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -42,7 +52,7 @@ export function VolunteerCard({ volunteer, onClick }: VolunteerCardProps) {
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span style={{ fontSize: '16px', fontWeight: 500, color: '#FFFFFF' }}>{name}</span>
-            <span style={{ fontSize: '13px', color: '#D9D9D9' }}>Ward {volunteer.home_ward_id}</span>
+            <span style={{ fontSize: '13px', color: '#D9D9D9' }}>{wardLabel}</span>
           </div>
         </div>
         <ReliabilityArc score={volunteer.reliability_score} />

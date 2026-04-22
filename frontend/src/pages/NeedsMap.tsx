@@ -1,270 +1,118 @@
-import { useState } from 'react';
-import { useNeeds } from '../hooks/useNeeds'
 import { PageWrapper } from '../components/layout/PageWrapper'
-import { motion, AnimatePresence } from 'framer-motion'
-import { SidebarClose, SidebarOpen, X } from 'lucide-react'
-import { Button } from '../components/ui/Button'
-import { UrgencyBadge } from '../components/needs/UrgencyBadge'
-import { C } from '../utils/colors'
+import { useMapStore } from '../store/mapStore'
+import { useIsMobile } from '../hooks/useIsMobile'
 
-const glassPanel: React.CSSProperties = {
-  background: 'rgba(26,26,26,0.80)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255,158,0,0.18)',
+const glassCard: React.CSSProperties = {
+  background: 'rgba(26, 26, 26, 0.72)',
+  border: '1px solid rgba(255, 158, 0, 0.18)',
+  borderRadius: '16px',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
 }
 
-export function NeedsMap() {
-  const { data: needs } = useNeeds()
-  const [leftOpen, setLeftOpen] = useState(true)
-  const [selectedNeedId, setSelectedNeedId] = useState<string | null>(null)
+const ZONES = [
+  { id: 'Dharavi', x: 70, y: 70, width: 120, height: 90, color: '#FF9E00', level: 'Critical' },
+  { id: 'Kurla East', x: 215, y: 65, width: 120, height: 90, color: '#C77DFF', level: 'High' },
+  { id: 'Govandi', x: 365, y: 78, width: 120, height: 90, color: '#6EE7B7', level: 'Moderate' },
+  { id: 'Mankhurd', x: 150, y: 190, width: 125, height: 90, color: '#D9D9D9', level: 'Watch' },
+  { id: 'Bandra West', x: 315, y: 200, width: 130, height: 90, color: '#FF9E00', level: 'Critical' },
+]
 
-  const selectedNeed = needs?.find(n => n.id === selectedNeedId)
+export function NeedsMap() {
+  const isMobile = useIsMobile(980)
+  const selectedWard = useMapStore((s) => s.selectedWardId)
+  const wards = useMapStore((s) => s.wards)
 
   return (
-    <PageWrapper noPadding>
-      {/* Map background placeholder with ward zones */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(10,6,0,0.35)',
-        flexDirection: 'column',
-        padding: '40px',
-      }}>
-        {/* Ward zones visualization */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '16px',
-          marginBottom: '40px',
-          width: '100%',
-          maxWidth: '600px',
-        }}>
-          {[
-            { name: 'Dharavi Ward', intensity: 'rgba(255, 158, 0, 0.35)', count: 38 },
-            { name: 'Kurla Ward', intensity: 'rgba(255, 158, 0, 0.22)', count: 24 },
-            { name: 'Govandi Ward', intensity: 'rgba(224, 90, 0, 0.18)', count: 18 },
-            { name: 'Mankhurd Ward', intensity: 'rgba(199, 125, 255, 0.12)', count: 12 },
-            { name: 'Bandra Ward', intensity: 'rgba(217, 217, 217, 0.06)', count: 6 },
-          ].map((ward) => (
-            <div
-              key={ward.name}
-              style={{
-                background: ward.intensity,
-                border: '1px solid rgba(255, 158, 0, 0.3)',
-                borderRadius: '12px',
-                padding: '24px 16px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                position: 'relative',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center', lineHeight: 1.4 }}>
-                {ward.name}
-              </div>
-              <div style={{
-                background: 'rgba(255, 158, 0, 0.25)',
-                border: '1px solid rgba(255, 158, 0, 0.4)',
-                color: '#FF9E00',
-                borderRadius: '16px',
-                padding: '3px 10px',
-                fontSize: '10px',
-                fontWeight: 500,
-              }}>
-                {ward.count} needs
-              </div>
-            </div>
-          ))}
+    <PageWrapper>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', color: '#FFFFFF', fontWeight: 500 }}>Needs Map</h1>
+          <p style={{ fontSize: '14px', color: '#D9D9D9', marginTop: '4px' }}>
+            Zone-based operational view for ward prioritization and connector routing.
+          </p>
         </div>
 
-        {/* Legend */}
-        <div style={{
-          display: 'flex',
-          gap: '20px',
-          alignItems: 'center',
-          marginBottom: '16px',
-        }}>
-          {[
-            { color: 'rgba(255, 158, 0, 0.35)', label: 'High' },
-            { color: 'rgba(255, 158, 0, 0.22)', label: 'Medium' },
-            { color: 'rgba(217, 217, 217, 0.06)', label: 'Low' },
-          ].map((item) => (
-            <div key={item.label} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <div style={{
-                width: '10px',
-                height: '10px',
-                background: item.color,
-                borderRadius: '2px',
-              }} />
-              <span style={{ fontSize: '11px', color: '#D9D9D9' }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) 320px', gap: '18px' }}>
+          <div style={{ ...glassCard, padding: '12px' }}>
+            <div style={{ border: '1px solid rgba(217,217,217,0.12)', borderRadius: '12px', overflow: 'hidden', background: 'radial-gradient(circle at 20% 0%, rgba(255,158,0,0.08), transparent 38%), linear-gradient(180deg, #121212 0%, #1A1A1A 100%)' }}>
+              <svg viewBox="0 0 560 360" style={{ width: '100%', height: isMobile ? '320px' : '100%', display: 'block' }}>
+                <defs>
+                  <pattern id="dotGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill="rgba(217,217,217,0.12)" />
+                  </pattern>
+                </defs>
+                <rect width="560" height="360" fill="url(#dotGrid)" />
 
-        {/* Info label */}
-        <div style={{ fontSize: '11px', color: 'rgba(217, 217, 217, 0.35)', textAlign: 'center' }}>
-          LIVE MAP — Mapbox token required for full view
-        </div>
-      </div>
+                {ZONES.map((zone, idx) => (
+                  <g key={zone.id}>
+                    <rect
+                      x={zone.x}
+                      y={zone.y}
+                      rx="14"
+                      width={zone.width}
+                      height={zone.height}
+                      fill="rgba(255,255,255,0.02)"
+                      stroke={zone.color}
+                      strokeWidth={selectedWard && selectedWard !== zone.id ? 1.2 : 2.2}
+                      style={{ filter: selectedWard === zone.id ? 'drop-shadow(0px 0px 8px rgba(255,158,0,0.5))' : 'none' }}
+                    />
+                    <text x={zone.x + 12} y={zone.y + 26} fill="#FFFFFF" fontSize="13" fontWeight="500" fontFamily="inherit">
+                      {zone.id}
+                    </text>
+                    <text x={zone.x + 12} y={zone.y + 47} fill="rgba(217,217,217,0.85)" fontSize="11" fontFamily="inherit">
+                      Priority: {zone.level}
+                    </text>
+                    <text x={zone.x + 12} y={zone.y + 66} fill="rgba(217,217,217,0.65)" fontSize="10" fontFamily="inherit">
+                      Active relays: {3 + idx}
+                    </text>
+                  </g>
+                ))}
 
-      {/* Left filter panel */}
-      <AnimatePresence>
-        {leftOpen && (
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '280px',
-              ...glassPanel,
-              borderRight: '1px solid rgba(255,158,0,0.15)',
-              borderTop: 'none',
-              borderBottom: 'none',
-              borderLeft: 'none',
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid rgba(255,158,0,0.12)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexShrink: 0,
-            }}>
-              <h2 style={{ color: '#FFFFFF', fontWeight: 500, fontSize: '15px', margin: 0 }}>Filters</h2>
-              <button
-                onClick={() => setLeftOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted }}
-              >
-                <SidebarClose style={{ width: '20px', height: '20px' }} />
-              </button>
+                <g stroke="rgba(217,217,217,0.4)" strokeWidth="1.4" strokeDasharray="6 6" fill="none">
+                  <path d="M190 112 C210 104, 220 108, 235 110" />
+                  <path d="M335 112 C350 118, 362 120, 368 122" />
+                  <path d="M250 200 C245 175, 235 152, 224 138" />
+                  <path d="M315 205 C328 182, 338 160, 356 148" />
+                </g>
+              </svg>
             </div>
-            <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-              <span style={{
-                fontSize: '10px',
-                color: 'rgba(217,217,217,0.45)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                display: 'block',
-                marginBottom: '10px',
-              }}>
-                Matching Needs
-              </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ ...glassCard, padding: '14px' }}>
+              <h3 style={{ fontSize: '14px', color: '#FFFFFF', marginBottom: '8px', fontWeight: 500 }}>Map Legend</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {needs?.map(need => (
-                  <div
-                    key={need.id}
-                    onClick={() => setSelectedNeedId(need.id)}
-                    style={{
-                      background: selectedNeedId === need.id ? 'rgba(255,158,0,0.12)' : 'rgba(26,26,26,0.5)',
-                      border: `1px solid ${selectedNeedId === need.id ? 'rgba(255,158,0,0.35)' : 'rgba(255,158,0,0.1)'}`,
-                      borderRadius: '10px',
-                      padding: '10px 12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 500, color: C.silver }}>{need.category}</span>
-                      <UrgencyBadge urgency={need.urgency} />
-                    </div>
-                    <span style={{ fontSize: '11px', color: 'rgba(217,217,217,0.45)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Ward {need.ward_id}
-                    </span>
+                {[
+                  { color: '#FF9E00', label: 'Critical Priority' },
+                  { color: '#C77DFF', label: 'High Priority' },
+                  { color: '#6EE7B7', label: 'Moderate Priority' },
+                  { color: '#D9D9D9', label: 'Watch Zone' },
+                ].map((item) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: item.color }} />
+                    <span style={{ fontSize: '12px', color: '#D9D9D9' }}>{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Toggle button */}
-      {!leftOpen && (
-        <button
-          onClick={() => setLeftOpen(true)}
-          style={{
-            position: 'absolute', left: '16px', top: '16px', zIndex: 10,
-            background: 'rgba(26,26,26,0.8)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,158,0,0.2)',
-            borderRadius: '8px',
-            padding: '8px',
-            cursor: 'pointer',
-            color: C.silver,
-          }}
-        >
-          <SidebarOpen style={{ width: '20px', height: '20px' }} />
-        </button>
-      )}
-
-      {/* Right detail panel */}
-      <AnimatePresence>
-        {selectedNeed && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '300px',
-              ...glassPanel,
-              borderLeft: '1px solid rgba(255,158,0,0.15)',
-              borderTop: 'none',
-              borderBottom: 'none',
-              borderRight: 'none',
-              zIndex: 10,
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            }}
-          >
-            <button
-              onClick={() => setSelectedNeedId(null)}
-              style={{
-                position: 'absolute', top: '20px', right: '20px',
-                background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted,
-              }}
-            >
-              <X style={{ width: '18px', height: '18px' }} />
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{selectedNeed.category}</h2>
-              <UrgencyBadge urgency={selectedNeed.urgency} />
+            <div style={{ ...glassCard, padding: '14px' }}>
+              <h3 style={{ fontSize: '14px', color: '#FFFFFF', marginBottom: '8px', fontWeight: 500 }}>Data.gov Ward Sync</h3>
+              <div style={{ fontSize: '12px', color: '#D9D9D9', lineHeight: 1.6 }}>
+                {wards.length > 0
+                  ? `${wards.length} wards loaded from Data.gov integration.`
+                  : 'Using fallback ward catalog until Data.gov source is reachable.'}
+              </div>
+              {selectedWard && (
+                <div style={{ marginTop: '10px', fontSize: '12px', color: '#C77DFF' }}>
+                  Selected ward filter: {selectedWard}
+                </div>
+              )}
             </div>
-
-            <span style={{ fontSize: '13px', color: C.textMuted }}>Ward {selectedNeed.ward_id}</span>
-
-            <p style={{ fontSize: '14px', color: C.silver, lineHeight: 1.6, flex: 1 }}>
-              {selectedNeed.description}
-            </p>
-
-            <div style={{ borderTop: '1px solid rgba(255,158,0,0.1)', paddingTop: '16px' }}>
-              <Button variant="primary" style={{ width: '100%' }}>Dispatch Volunteers</Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </div>
     </PageWrapper>
   )
 }

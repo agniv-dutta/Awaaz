@@ -6,10 +6,11 @@ from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
 from app.models.dispatch import Dispatch, DispatchStatus
-from app.models.need import Need, NeedStatus
+from app.models.need import Need, NeedStatus, NeedCategory, NeedUrgency
 from app.models.report import Report, ReportStatus
 from app.models.volunteer import Volunteer
 from app.services.matcher import get_top_matches
+from app.services.ocr_service import extract_needs_with_gemini
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,36 @@ async def report_processor(report_id: str) -> None:
             report_uuid = uuid.UUID(report_id)
             report = (await session.execute(select(Report).filter(Report.id == str(report_uuid)))).scalars().first()
             if report and report.status == ReportStatus.PENDING:
-                report.parsed_needs = {"extracted": ["medical", "food"]}
+                parsed = await extract_needs_with_gemini(report.raw_text or "")
+                report.parsed_needs = parsed
+
+                category_raw = str(parsed.get("category", "OTHER")).upper()
+                urgency_raw = str(parsed.get("urgency", "MEDIUM")).upper()
+                summary = str(parsed.get("summary", report.raw_text or "Parsed from OCR"))
+
+                valid_categories = {item.value for item in NeedCategory}
+                valid_urgencies = {item.value for item in NeedUrgency}
+
+                category = NeedCategory(category_raw if category_raw in valid_categories else "OTHER")
+                urgency = NeedUrgency(urgency_raw if urgency_raw in valid_urgencies else "MEDIUM")
+
+                urgency_scores = {
+                    NeedUrgency.CRITICAL: 100.0,
+                    NeedUrgency.HIGH: 75.0,
+                    NeedUrgency.MEDIUM: 50.0,
+                    NeedUrgency.LOW: 25.0,
+                }
+
+                need = Need(
+                    category=category,
+                    urgency=urgency,
+                    urgency_score=urgency_scores[urgency],
+                    report_count=1,
+                    description=summary,
+                    ward_id=report.ward_id,
+                    status=NeedStatus.OPEN,
+                )
+                session.add(need)
                 report.status = ReportStatus.PROCESSED
                 await session.commit()
                 logger.info("Processed report %s", report_id)

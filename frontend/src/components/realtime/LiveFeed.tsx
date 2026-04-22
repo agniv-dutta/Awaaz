@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSocket } from '../../hooks/useSocket'
 import { C } from '../../utils/colors'
 import { Badge } from '../ui/Badge'
+import { CATEGORY_LABELS } from '../../utils/labels'
 
 interface FeedItem {
   id: string
@@ -80,7 +81,7 @@ export function LiveFeed() {
               >
                 {/* Category badge */}
                 <Badge variant={isSilver ? 'silver' : isViolet ? 'medium' : 'processed'}>
-                  {item.category}
+                  {CATEGORY_LABELS[item.category] || item.category}
                 </Badge>
 
                 {/* Ward */}
