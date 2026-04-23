@@ -10,7 +10,7 @@ from app.models.need import Need, NeedStatus, NeedCategory, NeedUrgency
 from app.models.report import Report, ReportStatus
 from app.models.volunteer import Volunteer
 from app.services.matcher import get_top_matches
-from app.services.ocr_service import extract_needs_with_gemini
+from app.services.ocr_service import extract_needs_with_groq
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ async def report_processor(report_id: str) -> None:
             report_uuid = uuid.UUID(report_id)
             report = (await session.execute(select(Report).filter(Report.id == str(report_uuid)))).scalars().first()
             if report and report.status == ReportStatus.PENDING:
-                parsed = await extract_needs_with_gemini(report.raw_text or "")
+                parsed = await extract_needs_with_groq(report.raw_text or "")
                 report.parsed_needs = parsed
 
                 category_raw = str(parsed.get("category", "OTHER")).upper()

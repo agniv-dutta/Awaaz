@@ -5,7 +5,7 @@ import { PageWrapper } from '../components/layout/PageWrapper'
 import { VolunteerCard } from '../components/volunteers/VolunteerCard'
 import { useVolunteers } from '../hooks/useVolunteers'
 import type { Volunteer } from '../types'
-import { getVolunteerInsight } from '../services/gemini'
+import { getVolunteerInsight } from '../services/ai'
 
 // Extend Volunteer for mock data as the name is stored in User table in DB
 interface VolunteerWithUser extends Volunteer {
@@ -244,9 +244,8 @@ export function Volunteers() {
   const [search, setSearch] = useState('')
   const [activeSkills, setActiveSkills] = useState<string[]>([])
   const [selectedVol, setSelectedVol] = useState<VolunteerWithUser | null>(null)
-  const [geminiInsight, setGeminiInsight] = useState<string | null>(null)
-  const [geminiLoading, setGeminiLoading] = useState(false)
-  const hasGeminiKey = Boolean((import.meta.env.VITE_GEMINI_API_KEY || '').trim())
+  const [aiInsight, setAiInsight] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const toggleSkill = (skill: string) => {
     setActiveSkills(prev =>
@@ -300,29 +299,23 @@ export function Volunteers() {
 
   useEffect(() => {
     if (!selectedVol) {
-      setGeminiInsight(null)
-      setGeminiLoading(false)
-      return
-    }
-
-    if (!hasGeminiKey) {
-      setGeminiInsight(null)
-      setGeminiLoading(false)
+      setAiInsight(null)
+      setAiLoading(false)
       return
     }
 
     const wardNeeds = MOCK_NEEDS.filter((need) => need.ward === selectedVol.ward)
-    setGeminiLoading(true)
+    setAiLoading(true)
     getVolunteerInsight(selectedVol as any, wardNeeds)
       .then((insight) => {
-        setGeminiInsight(insight)
-        setGeminiLoading(false)
+        setAiInsight(insight)
+        setAiLoading(false)
       })
       .catch(() => {
-        setGeminiInsight(null)
-        setGeminiLoading(false)
+        setAiInsight(null)
+        setAiLoading(false)
       })
-  }, [selectedVol, hasGeminiKey])
+  }, [selectedVol])
 
   return (
     <PageWrapper noPadding>
@@ -684,7 +677,7 @@ export function Volunteers() {
                     </div>
                   </div>
 
-                  {/* Gemini AI insight */}
+                  {/* AI insight */}
                   <div style={{
                     background: 'rgba(199, 125, 255, 0.06)',
                     border: '1px solid rgba(199, 125, 255, 0.2)',
@@ -699,19 +692,19 @@ export function Volunteers() {
                         </svg>
                       </div>
                       <span style={{ fontSize: '12px', color: '#C77DFF', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>
-                        Gemini AI insight
+                        AI insight
                       </span>
                     </div>
-                    {geminiLoading ? (
+                    {aiLoading ? (
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C77DFF', animation: 'pulse-dot 1s ease infinite' }}/>
                         <span style={{ fontSize: '13px', color: 'rgba(199,125,255,0.6)' }}>Analyzing volunteer profile...</span>
                       </div>
-                    ) : geminiInsight ? (
-                      <p style={{ fontSize: '13px', color: '#D9D9D9', lineHeight: 1.6, margin: 0 }}>{geminiInsight}</p>
+                    ) : aiInsight ? (
+                      <p style={{ fontSize: '13px', color: '#D9D9D9', lineHeight: 1.6, margin: 0 }}>{aiInsight}</p>
                     ) : (
                       <p style={{ fontSize: '12px', color: 'rgba(217,217,217,0.35)', margin: 0 }}>
-                        Add VITE_GEMINI_API_KEY to .env to enable AI insights
+                        AI insight currently unavailable
                       </p>
                     )}
                   </div>

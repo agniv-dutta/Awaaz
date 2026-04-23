@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
-from app.routers import auth, reports, needs, volunteers, dispatches, analytics, websockets
+from app.routers import auth, reports, needs, volunteers, dispatches, analytics, websockets, ai
 from app.services.background_tasks import dispatch_reminder, need_aggregator, reliability_updater
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ app.include_router(volunteers.router, prefix=API_PREFIX)
 app.include_router(dispatches.router, prefix=API_PREFIX)
 app.include_router(analytics.router, prefix=API_PREFIX)
 app.include_router(websockets.router, prefix=API_PREFIX)
+app.include_router(ai.router, prefix=API_PREFIX)
 
 @app.get("/")
 async def root():

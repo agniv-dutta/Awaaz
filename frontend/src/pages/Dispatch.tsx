@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/Badge'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSocket } from '../hooks/useSocket'
 import { useQueryClient } from '@tanstack/react-query'
-import { generateDispatchSuggestion } from '../services/gemini'
+import { generateDispatchSuggestion } from '../services/ai'
 import { CATEGORY_LABELS, STATUS_LABELS } from '../utils/labels'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -165,7 +165,6 @@ export function Dispatch() {
   const [rows, setRows] = useState<DispatchRowModel[]>(MOCK_DISPATCHES)
   const [suggestion, setSuggestion] = useState<string>('')
   const [suggestionLoading, setSuggestionLoading] = useState(false)
-  const hasGeminiKey = Boolean((import.meta.env.VITE_GEMINI_API_KEY || '').trim())
 
   useSocket('dispatch_status_changed', (payload) => {
     setFlashingId(payload.id)
@@ -181,17 +180,14 @@ export function Dispatch() {
   }, [dispatches])
 
   const refreshSuggestion = async () => {
-    if (!hasGeminiKey) {
-      setSuggestion('Add VITE_GEMINI_API_KEY to enable AI dispatch recommendations.')
-      return
-    }
-
     setSuggestionLoading(true)
     try {
       const urgencyOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }
       const need = [...MOCK_NEEDS].sort((a, b) => urgencyOrder[b.urgency] - urgencyOrder[a.urgency])[0]
       const text = await generateDispatchSuggestion(need, MOCK_VOLUNTEERS)
       setSuggestion(text || 'No recommendation available right now.')
+    } catch {
+      setSuggestion('No recommendation available right now.')
     } finally {
       setSuggestionLoading(false)
     }
@@ -247,7 +243,7 @@ export function Dispatch() {
                 AI Dispatch Advisor
               </span>
               <span style={{ fontSize: '10px', color: 'rgba(199,125,255,0.5)', border: '1px solid rgba(199,125,255,0.25)', borderRadius: '999px', padding: '2px 8px' }}>
-                Powered by Gemini
+                Powered by Groq
               </span>
             </div>
             <button

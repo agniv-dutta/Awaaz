@@ -1,26 +1,19 @@
 import json
 from typing import Any
 
-import httpx
-
-from app.core.config import settings
-
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+from app.services.ai_service import ask_groq
 
 
-async def extract_needs_with_gemini(raw_text: str) -> dict[str, Any]:
-    """
-    Uses Gemini to structure OCR/report text into need fields.
-    """
-    api_key = (settings.GEMINI_API_KEY or "").strip()
-    if not api_key:
-        return {
-            "category": "OTHER",
-            "urgency": "MEDIUM",
-            "summary": raw_text[:220] if raw_text else "No text extracted",
-            "keyNeeds": [],
-        }
+def _fallback_parse(raw_text: str) -> dict[str, Any]:
+    return {
+        "category": "OTHER",
+        "urgency": "MEDIUM",
+        "summary": raw_text[:220] if raw_text else "No text extracted",
+        "keyNeeds": [],
+    }
 
+
+async def extract_needs_with_groq(raw_text: str) -> dict[str, Any]:
     prompt = (
         "You are analyzing a community field report for Awaaz, a Mumbai NGO platform.\n\n"
         f"Report text: \"{raw_text}\"\n\n"
@@ -33,35 +26,11 @@ async def extract_needs_with_gemini(raw_text: str) -> dict[str, Any]:
         "}"
     )
 
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 220,
-        },
-    }
+    text = await ask_groq(prompt, max_tokens=220, temperature=0.2)
+    if not text:
+        return _fallback_parse(raw_text)
 
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.post(
-            f"{GEMINI_URL}?key={api_key}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
-
-    if response.status_code >= 400:
-        return {
-            "category": "OTHER",
-            "urgency": "MEDIUM",
-            "summary": raw_text[:220] if raw_text else "No text extracted",
-            "keyNeeds": [],
-        }
-
-    data = response.json()
-    text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "{}")
     cleaned = text.replace("```json", "").replace("```", "").strip()
-
     try:
         parsed = json.loads(cleaned)
         return {
@@ -77,10 +46,3 @@ async def extract_needs_with_gemini(raw_text: str) -> dict[str, Any]:
             "summary": cleaned or (raw_text[:220] if raw_text else "No text extracted"),
             "keyNeeds": [],
         }
-
-
-async def enhance_with_gemini(raw_text: str) -> dict[str, Any]:
-    """
-    Backwards-compatible alias while callers transition to extract_needs_with_gemini.
-    """
-    return await extract_needs_with_gemini(raw_text)

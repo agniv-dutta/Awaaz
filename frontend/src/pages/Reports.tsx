@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper'
-import { analyzeReportText } from '../services/gemini'
+import { analyzeReportText } from '../services/ai'
 import { detectAndTranslate } from '../services/translate'
 import { CATEGORY_LABELS, URGENCY_LABELS } from '../utils/labels'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -66,8 +66,6 @@ export function Reports() {
   const [analysis, setAnalysis] = useState<{ category: string; urgency: string; summary: string } | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const hasGeminiKey = Boolean((import.meta.env.VITE_GEMINI_API_KEY || '').trim())
-
   const recentReports = useMemo(() => MOCK_REPORTS.slice(0, 3), [])
 
   const onDescriptionBlur = async () => {
@@ -94,7 +92,7 @@ export function Reports() {
   }
 
   const runAiAnalyze = async () => {
-    if (!hasGeminiKey || !description.trim()) return
+    if (!description.trim()) return
 
     setAnalyzing(true)
     try {
@@ -248,20 +246,20 @@ export function Reports() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     onClick={runAiAnalyze}
-                    disabled={!hasGeminiKey || analyzing || !description.trim()}
+                    disabled={analyzing || !description.trim()}
                     style={{
                       borderRadius: '10px',
                       border: '1px solid rgba(199,125,255,0.35)',
                       background: 'rgba(199,125,255,0.12)',
                       color: '#C77DFF',
-                      cursor: !hasGeminiKey || analyzing || !description.trim() ? 'not-allowed' : 'pointer',
+                      cursor: analyzing || !description.trim() ? 'not-allowed' : 'pointer',
                       padding: '10px 14px',
                       fontSize: '13px',
-                      opacity: hasGeminiKey ? 1 : 0.55,
+                      opacity: 1,
                       fontFamily: 'inherit',
                     }}
                   >
-                    {analyzing ? 'Analyzing...' : 'Analyze with Gemini'}
+                    {analyzing ? 'Analyzing...' : 'Analyze with AI'}
                   </button>
 
                   <button
@@ -284,11 +282,9 @@ export function Reports() {
                   </button>
                 </div>
 
-                {!hasGeminiKey && (
-                  <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.55)' }}>
-                    Add VITE_GEMINI_API_KEY to enable AI categorization.
-                  </div>
-                )}
+                <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.55)' }}>
+                  AI analysis runs through backend model routing.
+                </div>
               </div>
             </div>
 
@@ -311,7 +307,7 @@ export function Reports() {
                   </div>
                 ) : (
                   <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.52)' }}>
-                    Run Gemini analysis to auto-tag this report.
+                    Run AI analysis to auto-tag this report.
                   </div>
                 )}
               </div>
