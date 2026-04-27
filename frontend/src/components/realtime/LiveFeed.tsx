@@ -28,7 +28,7 @@ export function LiveFeed() {
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '300px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'auto', minHeight: 'auto', padding: '16px 18px' }}>
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -57,7 +57,7 @@ export function LiveFeed() {
       </div>
 
       {/* Feed items */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', paddingRight: '2px' }}>
+      <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', paddingRight: '2px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const isOld = new Date().getTime() - new Date(item.timestamp).getTime() > 2 * 60 * 60 * 1000
@@ -80,6 +80,10 @@ export function LiveFeed() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
+                  marginLeft: '-18px',
+                  marginRight: '-18px',
+                  paddingLeft: '18px',
+                  paddingRight: '18px',
                 }}
               >
                 {/* Category badge */}

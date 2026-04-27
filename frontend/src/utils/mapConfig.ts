@@ -1,0 +1,29 @@
+export const MAP_CONFIG = {
+  // Primary: Stadia Maps dark — reliable, free, no key needed
+  PRIMARY_TILE: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+  PRIMARY_ATTR: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  
+  // Fallback 1: OSM standard with dark CSS filter
+  FALLBACK_TILE: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  FALLBACK_ATTR: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
+  // Mumbai center
+  MUMBAI_CENTER: [19.0760, 72.8777] as [number, number],
+  MUMBAI_ZOOM: 12,
+  
+  // Ward coordinates (real Mumbai)
+  WARDS: [
+    { id:'1', name:'Dharavi',     lat:19.0398, lng:72.8514, needs:38, urgency:'CRITICAL', topCategory:'MEDICAL'   },
+    { id:'2', name:'Kurla East',  lat:19.0728, lng:72.8826, needs:27, urgency:'HIGH',     topCategory:'FOOD'      },
+    { id:'3', name:'Govandi',     lat:19.0474, lng:72.9195, needs:19, urgency:'HIGH',     topCategory:'SHELTER'   },
+    { id:'4', name:'Mankhurd',    lat:19.0444, lng:72.9347, needs:14, urgency:'MEDIUM',   topCategory:'EDUCATION' },
+    { id:'5', name:'Bandra West', lat:19.0596, lng:72.8295, needs:31, urgency:'CRITICAL', topCategory:'MEDICAL'   },
+  ],
+}
+
+export const URGENCY_COLORS: Record<string, string> = {
+  CRITICAL: '#FF9E00',
+  HIGH:     '#E05A00',
+  MEDIUM:   '#C77DFF',
+  LOW:      'rgba(217,217,217,0.6)',
+}

@@ -1,26 +1,44 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Badge } from '../components/ui/Badge'
 
 export function Login() {
-  const [email, setEmail] = useState('admin@awaaz.org')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const [isHoverNGO, setIsHoverNGO] = useState(false)
   const [isHoverField, setIsHoverField] = useState(false)
   const { login } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    login('mock_token_123', { id: '1', email, name: 'Admin Dutta', phone: '123', role: 'admin', ward_id: null, is_active: true })
-    navigate('/')
+    setIsLoading(true)
+    setError('')
+
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Login failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fillDemoCredentials = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail)
+    setPassword(demoPassword)
   }
 
   const handleQuickLogin = (role: 'admin' | 'volunteer') => {
-    const name = role === 'admin' ? 'NGO Coordinator' : 'Field Volunteer'
-    login('mock_token_123', { id: role, email: `${role}@awaaz.org`, name, phone: '123', role, ward_id: null, is_active: true })
-    navigate('/')
+    if (role === 'admin') {
+      fillDemoCredentials('admin@awaaz.dev', 'awaaz123')
+    } else {
+      fillDemoCredentials('volunteer@awaaz.dev', 'awaaz123')
+    }
   }
 
   return (
@@ -72,7 +90,7 @@ export function Login() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="name@workspace.com"
+                placeholder="admin@awaaz.dev"
                 style={{
                   width: '100%', height: '48px', background: 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(255,158,0,0.2)', borderRadius: '10px',
@@ -104,16 +122,31 @@ export function Login() {
               </div>
             </div>
 
+            {error && (
+              <div style={{
+                padding: '12px',
+                background: 'rgba(248, 113, 113, 0.1)',
+                border: '1px solid rgba(248, 113, 113, 0.3)',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#f87171'
+              }}>
+                {error}
+              </div>
+            )}
+
             <button
               type="submit"
               className="btn-primary-hover"
+              disabled={isLoading}
               style={{
-                width: '100%', height: '50px', background: '#FF9E00', color: '#1A1A1A',
-                borderRadius: '10px', fontSize: '15px', fontWeight: 500, letterSpacing: '0.02em',
-                border: 'none', cursor: 'pointer', transition: 'background 0.15s ease'
+                width: '100%', height: '50px', background: isLoading ? 'rgba(255,158,0,0.5)' : '#FF9E00', 
+                color: '#1A1A1A', borderRadius: '10px', fontSize: '15px', fontWeight: 500, 
+                letterSpacing: '0.02em', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer', 
+                transition: 'background 0.15s ease'
               }}
             >
-              Sign In
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
@@ -153,6 +186,18 @@ export function Login() {
               </button>
             </div>
           </form>
+
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <span style={{ fontSize: '13px', color: 'rgba(217,217,217,0.6)' }}>
+              Don't have an account?{' '}
+              <Link 
+                to="/register" 
+                style={{ color: '#FF9E00', textDecoration: 'none', fontWeight: 500 }}
+              >
+                Sign up
+              </Link>
+            </span>
+          </div>
         </div>
 
         {/* Bottom: Stats */}
@@ -218,8 +263,8 @@ export function Login() {
           transform: 'rotate(-2deg)',
         }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            <Badge variant="processed">MEDICAL</Badge>
-            <Badge variant="critical">CRITICAL</Badge>
+            <Badge variant="orange">MEDICAL</Badge>
+            <Badge variant="red">CRITICAL</Badge>
           </div>
           <h3 style={{ fontSize: '18px', fontWeight: 500, color: '#FFFFFF', border: 'none', padding: 0, marginBottom: '6px' }}>
             Dharavi Ward — urgent care needed

@@ -52,25 +52,37 @@ async def seed_db() -> None:
         await session.refresh(ward2)
 
         print("Seeding users...")
-        admin = await create_user(
+        # Demo accounts for Awaaz
+        coordinator = await create_user(
             session,
             UserCreate(
-                email="admin@example.com",
-                name="Admin",
-                phone="1111111111",
-                role=RoleEnum.admin,
-                password="password",
+                email="coordinator@awaaz.dev",
+                name="NGO Coordinator",
+                phone="9876543210",
+                role=RoleEnum.ngo_coordinator,
+                password="awaaz123",
                 ward_id=uuid.UUID(ward1.id),
             ),
         )
         volunteer_user = await create_user(
             session,
             UserCreate(
-                email="volunteer@example.com",
-                name="Volunteer",
-                phone="2222222222",
+                email="volunteer@awaaz.dev",
+                name="Field Volunteer",
+                phone="9876543211",
                 role=RoleEnum.volunteer,
-                password="password",
+                password="awaaz123",
+                ward_id=uuid.UUID(ward1.id),
+            ),
+        )
+        admin = await create_user(
+            session,
+            UserCreate(
+                email="admin@awaaz.dev",
+                name="System Admin",
+                phone="9876543212",
+                role=RoleEnum.admin,
+                password="awaaz123",
                 ward_id=uuid.UUID(ward1.id),
             ),
         )

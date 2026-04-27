@@ -38,6 +38,7 @@ export interface Need {
 export interface Volunteer {
   id: string;
   user_id: string;
+  name?: string;
   skills: string[];
   languages: string[];
   availability_schedule: Record<string, string[]>;

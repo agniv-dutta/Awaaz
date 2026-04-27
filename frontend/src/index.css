@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -68,6 +69,11 @@ body::before {
   to { transform: rotate(360deg); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Standard Transitions */
 .glass-card {
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -96,3 +102,90 @@ h1 {
   border-left: 3px solid #FF9E00;
   padding-left: 12px;
 }
+
+/* Force Leaflet CSS to load */
+.leaflet-container {
+  background: #0f0a04 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* If Stadia dark tiles don't load, make OSM tiles dark */
+.leaflet-tile-pane {
+  filter: brightness(0.85) saturate(0.3) hue-rotate(180deg);
+}
+
+/* Undo the filter for the overlay (circles stay orange) */
+.leaflet-overlay-pane,
+.leaflet-marker-pane,
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  filter: none !important;
+}
+
+/* Dark tooltips */
+.leaflet-tooltip {
+  background: rgba(10, 7, 4, 0.92) !important;
+  border: 1px solid rgba(255, 158, 0, 0.35) !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+  white-space: nowrap !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-tooltip::before { display: none !important; }
+
+/* Dark popups */
+.leaflet-popup-content-wrapper {
+  background: rgba(10, 7, 4, 0.96) !important;
+  border: 1px solid rgba(255, 158, 0, 0.2) !important;
+  border-radius: 14px !important;
+  color: #D9D9D9 !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7) !important;
+  min-width: 200px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-popup-tip-container { display: none !important; }
+.leaflet-popup-content { margin: 16px !important; }
+
+/* Dark zoom controls */
+.leaflet-control-zoom {
+  border: 1px solid rgba(255,158,0,0.2) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+.leaflet-control-zoom a {
+  background: rgba(10,7,4,0.9) !important;
+  color: #D9D9D9 !important;
+  border-color: rgba(255,158,0,0.15) !important;
+  font-size: 16px !important;
+  line-height: 28px !important;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(255,158,0,0.15) !important;
+  color: #FF9E00 !important;
+}
+.leaflet-bar {
+  border: 1px solid rgba(255,158,0,0.2) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* Attribution (keep but style it) */
+.leaflet-control-attribution {
+  background: rgba(10,7,4,0.7) !important;
+  color: rgba(217,217,217,0.3) !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a { color: rgba(255,158,0,0.4) !important; }
+
+/* Leaflet z-index and container fixes */
+.leaflet-container {
+  z-index: 1 !important;
+}
+.leaflet-tile-pane { z-index: 2 !important; }
+.leaflet-overlay-pane { z-index: 4 !important; }
+.leaflet-marker-pane { z-index: 6 !important; }
+.leaflet-popup-pane { z-index: 8 !important; }

@@ -19,6 +19,10 @@ async def get_user(db: AsyncSession, user_id: uuid.UUID) -> User | None:
     result = await db.execute(select(User).filter(User.id == str(user_id)))
     return result.scalars().first()
 
+async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
+    result = await db.execute(select(User).filter(User.id == user_id))
+    return result.scalars().first()
+
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     hashed_password = get_password_hash(user_in.password)
     db_user = User(
