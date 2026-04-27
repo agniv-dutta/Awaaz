@@ -1,26 +1,21 @@
 import type { HTMLAttributes } from 'react';
 import { C } from '../../utils/colors'
 
+export type BadgeVariant = 'orange' | 'violet' | 'silver' | 'green' | 'red';
+
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'critical' | 'high' | 'medium' | 'low' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'declined' | 'processed' | 'flagged' | 'silver'
+  variant?: BadgeVariant;
 }
 
-const variantStyles: Record<string, React.CSSProperties> = {
-  critical:    { background: C.orange, color: '#1A1A1A' },
-  high:        { background: C.orangeDark, color: '#1A1A1A' },
-  medium:      { background: C.violetGhost, color: C.violet, border: `1px solid ${C.violetBorder}` },
-  low:         { background: 'rgba(217, 217, 217, 0.08)', color: '#D9D9D9', border: '1px solid rgba(217, 217, 217, 0.2)' },
-  pending:     { background: 'rgba(217, 217, 217, 0.08)', color: '#D9D9D9', border: '1px solid rgba(217, 217, 217, 0.2)' },
-  accepted:    { background: C.violetGhost, color: C.violet, border: '1px solid transparent' },
-  in_progress: { background: C.orangeGhost, color: C.orange, border: '1px solid transparent' },
-  completed:   { background: 'rgba(217, 217, 217, 0.06)', color: 'rgba(217, 217, 217, 0.4)', border: '1px solid rgba(217, 217, 217, 0.1)' },
-  declined:    { background: 'rgba(220, 50, 50, 0.08)', color: 'rgba(220, 100, 100, 0.7)', border: '1px solid rgba(220, 50, 50, 0.2)' },
-  processed:   { background: C.violetGhost, color: C.violet, border: '1px solid transparent' },
-  flagged:     { background: C.orangeGhost, color: C.orange, border: '1px solid transparent' },
-  silver:      { background: 'rgba(217, 217, 217, 0.08)', color: '#D9D9D9', border: '1px solid rgba(217, 217, 217, 0.2)' },
+const variantStyles: Record<BadgeVariant, React.CSSProperties> = {
+  orange: { background: 'rgba(255,158,0,0.15)', color: '#FF9E00', border: '1px solid rgba(255,158,0,0.35)' },
+  violet: { background: 'rgba(199,125,255,0.12)', color: '#C77DFF', border: '1px solid rgba(199,125,255,0.3)' },
+  silver: { background: 'rgba(217,217,217,0.08)', color: '#D9D9D9', border: '1px solid rgba(217,217,217,0.2)' },
+  green:  { background: 'rgba(74,222,128,0.1)',   color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)' },
+  red:    { background: 'rgba(248,113,113,0.1)',  color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' },
 }
 
-export function Badge({ variant = 'low', style, ...props }: BadgeProps) {
+export function Badge({ variant = 'silver', style, ...props }: BadgeProps) {
   return (
     <span
       style={{

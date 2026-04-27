@@ -140,17 +140,13 @@ const MOCK_VOLUNTEERS = [
 ]
 
 function CategoryBadge({ category }: { category: string }) {
-  const variants: Record<string, 'critical' | 'high' | 'medium' | 'low' | 'silver'> = {
-    MEDICAL: 'critical',
-    FOOD: 'high',
-    SHELTER: 'silver',
-    EDUCATION: 'silver',
-    LEGAL: 'silver',
-    OTHER: 'silver',
-    LOGISTICS: 'medium',
-  }
+  const getCategoryVariant = (cat: string): 'orange' | 'violet' | 'silver' => {
+    if (cat === 'FOOD' || cat === 'MEDICAL') return 'orange';
+    if (cat === 'MENTAL_HEALTH' || cat === 'LEGAL') return 'violet';
+    return 'silver';
+  };
   return (
-    <Badge variant={variants[category] || 'low'} style={{ fontSize: '10px' }}>
+    <Badge variant={getCategoryVariant(category)} style={{ fontSize: '10px' }}>
       {CATEGORY_LABELS[category] || category}
     </Badge>
   )
@@ -162,7 +158,7 @@ export function Dispatch() {
   const queryClient = useQueryClient()
   const [flashingId, setFlashingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [rows, setRows] = useState<DispatchRowModel[]>(MOCK_DISPATCHES)
+  const [xaiRow, setXaiRow] = useState<number | null>(null)
   const [suggestion, setSuggestion] = useState<string>('')
   const [suggestionLoading, setSuggestionLoading] = useState(false)
 
@@ -172,12 +168,7 @@ export function Dispatch() {
     setTimeout(() => setFlashingId(null), 600)
   })
 
-  useEffect(() => {
-    if (Array.isArray(dispatches) && dispatches.length >= 6) {
-      // Keep demo richness unless API has a meaningful batch
-      setRows(MOCK_DISPATCHES)
-    }
-  }, [dispatches])
+  const tableData = dispatches && dispatches.length > 0 ? (dispatches as DispatchRowModel[]) : MOCK_DISPATCHES;
 
   const refreshSuggestion = async () => {
     setSuggestionLoading(true)
@@ -197,9 +188,9 @@ export function Dispatch() {
     refreshSuggestion()
   }, [])
 
-  const activeCount = rows.filter((d) => d.status === 'IN_PROGRESS' || d.status === 'ACCEPTED').length
-  const pendingCount = rows.filter((d) => d.status === 'PENDING_ACCEPT').length
-  const completedCount = rows.filter((d) => d.status === 'COMPLETED').length
+  const activeCount = tableData.filter((d) => d.status === 'IN_PROGRESS' || d.status === 'ACCEPTED').length
+  const pendingCount = tableData.filter((d) => d.status === 'PENDING_ACCEPT').length
+  const completedCount = tableData.filter((d) => d.status === 'COMPLETED').length
   const tableColumns = isMobile ? '2.2fr 1.4fr 1.2fr 1.2fr 0.9fr' : '2fr 1.5fr 1.5fr 1fr 1fr'
   const tableMinWidth = isMobile ? '760px' : '100%'
 
@@ -298,16 +289,18 @@ export function Dispatch() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {rows.length === 0 ? (
+              {tableData.length === 0 ? (
                 <EmptyState emptyMessage="No dispatches yet. Assign a volunteer to an urgent need to get started." />
               ) : (
-                rows.map((d) => (
+                tableData.map((d) => (
                   <DispatchRow
                     key={d.id}
                     dispatch={d}
                     isFlashing={flashingId === String(d.id)}
                     isExpanded={expandedId === d.id}
-                    onToggleExpand={() => setExpandedId(expandedId === d.id ? null : d.id)}
+                    onToggleExpand={() => { setExpandedId(expandedId === d.id ? null : d.id); setXaiRow(null); }}
+                    xaiExpanded={xaiRow === d.id}
+                    onToggleXai={() => { setXaiRow(xaiRow === d.id ? null : d.id); setExpandedId(null); }}
                     tableColumns={tableColumns}
                     isMobile={isMobile}
                   />
@@ -321,7 +314,7 @@ export function Dispatch() {
   )
 }
 
-function DispatchRow({ dispatch, isFlashing, isExpanded, onToggleExpand, tableColumns, isMobile }: { dispatch: DispatchRowModel; isFlashing: boolean; isExpanded: boolean; onToggleExpand: () => void; tableColumns: string; isMobile: boolean }) {
+function DispatchRow({ dispatch, isFlashing, isExpanded, onToggleExpand, xaiExpanded, onToggleXai, tableColumns, isMobile }: { dispatch: DispatchRowModel; isFlashing: boolean; isExpanded: boolean; onToggleExpand: () => void; xaiExpanded: boolean; onToggleXai: () => void; tableColumns: string; isMobile: boolean }) {
   const accentColor: Record<string, string> = {
     PENDING_ACCEPT: 'rgba(217,217,217,0.3)',
     ACCEPTED: '#C77DFF',
@@ -330,12 +323,12 @@ function DispatchRow({ dispatch, isFlashing, isExpanded, onToggleExpand, tableCo
     DECLINED: 'rgba(220,50,50,0.5)',
   }
 
-  const badgeVariantMap: Record<string, 'pending' | 'accepted' | 'in_progress' | 'completed' | 'declined'> = {
-    PENDING_ACCEPT: 'pending',
-    ACCEPTED: 'accepted',
-    IN_PROGRESS: 'in_progress',
-    COMPLETED: 'completed',
-    DECLINED: 'declined',
+  const badgeVariantMap: Record<string, 'orange' | 'violet' | 'green' | 'red' | 'silver'> = {
+    PENDING_ACCEPT: 'silver',
+    ACCEPTED: 'violet',
+    IN_PROGRESS: 'orange',
+    COMPLETED: 'green',
+    DECLINED: 'red',
   }
 
   const isCompleted = dispatch.status === 'COMPLETED'
@@ -396,9 +389,26 @@ function DispatchRow({ dispatch, isFlashing, isExpanded, onToggleExpand, tableCo
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <MatchScoreBar score={dispatch.matchScore} breakdown={dispatch.matchBreakdown} />
-          <span style={{ fontSize: '12px', color: '#D9D9D9' }}>{Math.round(dispatch.matchScore * 100)}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <MatchScoreBar score={dispatch.matchScore} breakdown={dispatch.matchBreakdown} />
+            <span style={{ fontSize: '12px', color: '#D9D9D9' }}>{Math.round(dispatch.matchScore * 100)}%</span>
+          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onToggleXai() }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(199,125,255,0.7)',
+              fontSize: '11px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              padding: 0,
+              letterSpacing: '0.03em',
+            }}
+          >
+            ✦ Why this match?
+          </button>
         </div>
 
         <div>
@@ -448,6 +458,63 @@ function DispatchRow({ dispatch, isFlashing, isExpanded, onToggleExpand, tableCo
                 {idx < 4 && <div style={{ width: '20px', height: '1px', background: 'rgba(255, 158, 0, 0.15)' }} />}
               </div>
             ))}
+          </motion.div>
+        )}
+        {xaiExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              background: 'rgba(199,125,255,0.04)',
+              borderTop: '1px solid rgba(199,125,255,0.12)',
+              borderBottom: '1px solid rgba(199,125,255,0.12)',
+              padding: '16px 20px 16px 60px',
+              position: 'relative',
+            }}
+          >
+            <div style={{ position: 'absolute', top: '16px', right: '20px' }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleXai() }}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'rgba(217,217,217,0.4)', fontSize: '12px',
+                }}
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: 500, marginBottom: '12px' }}>
+              Match score explained — {(dispatch.matchScore * 100).toFixed(0)}% overall compatibility
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[
+                { name: 'Skill Match', value: dispatch.matchBreakdown.skillMatch, color: '#FF9E00', weight: '×0.35' },
+                { name: 'Proximity', value: dispatch.matchBreakdown.proximityScore, color: '#C77DFF', weight: '×0.25' },
+                { name: 'Reliability', value: dispatch.matchBreakdown.reliabilityScore, color: '#4ade80', weight: '×0.20' },
+                { name: 'Availability', value: dispatch.matchBreakdown.availabilityScore, color: '#FF9E00', weight: '×0.15' },
+                { name: 'Language', value: dispatch.matchBreakdown.languageMatch, color: '#C77DFF', weight: '×0.05' },
+              ].map((factor, idx) => (
+                <div key={idx} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{factor.name}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(217,217,217,0.3)' }}>({factor.weight} weight)</div>
+                  </div>
+                  <div style={{ width: '100%', height: '3px', background: 'rgba(255,255,255,0.06)', marginTop: '8px', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: `${factor.value * 100}%`, height: '100%', background: factor.color }} />
+                  </div>
+                  <div style={{ fontSize: '15px', color: '#FFFFFF', fontWeight: 500, marginTop: '4px' }}>
+                    {factor.value.toFixed(2)}
+                  </div>
+                </div>
+              ))}
+              
+              <div style={{ gridColumn: 'span 2', fontSize: '11px', color: 'rgba(217,217,217,0.35)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', marginTop: '8px' }}>
+                Awaaz AI weighs skill compatibility most heavily (35%), followed by geographic proximity (25%) and volunteer reliability history (20%).
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

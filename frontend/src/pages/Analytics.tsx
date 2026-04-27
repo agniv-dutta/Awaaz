@@ -12,12 +12,19 @@ import {
 import { CATEGORY_LABELS } from '../utils/labels'
 
 const glassCard: React.CSSProperties = {
-  background: 'rgba(26, 26, 26, 0.72)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255, 158, 0, 0.18)',
+  background: 'rgba(10, 7, 4, 0.78)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 158, 0, 0.14)',
   borderRadius: '16px',
 }
+
+const ANALYTICS_METRICS = {
+  openNeeds: 214,
+  activeVolunteers: 47,
+  todayDispatches: 38,
+  dispatchRate: 89,
+} as const
 
 const CHART_LINES = [
   { key: 'medical', label: 'Medical', color: '#FF9E00' },
@@ -67,13 +74,11 @@ function TrendTooltip({ active, payload, label }: any) {
 }
 
 export function Analytics() {
-  const { data } = useAnalyticsSummary()
-
   const stats = {
-    open: data?.open_needs ?? 214,
-    volunteers: data?.active_volunteers ?? 38,
-    today: data?.today_dispatches ?? 47,
-    rate: data?.open_needs ? Math.round(((data.today_dispatches ?? 47) / data.open_needs) * 100) : 89,
+    open: ANALYTICS_METRICS.openNeeds,
+    volunteers: ANALYTICS_METRICS.activeVolunteers,
+    today: ANALYTICS_METRICS.todayDispatches,
+    rate: Math.min(ANALYTICS_METRICS.dispatchRate, 100),
   }
 
   return (
@@ -86,14 +91,14 @@ export function Analytics() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
           {[
-            { label: 'Open needs', value: stats.open, border: '#FF9E00' },
-            { label: 'Active volunteers', value: stats.volunteers, border: '#C77DFF' },
-            { label: 'Today dispatches', value: stats.today, border: '#6EE7B7' },
-            { label: 'Dispatch rate', value: `${stats.rate}%`, border: '#D9D9D9' },
+            { label: 'TOTAL NEEDS', value: stats.open, border: '#FF9E00' },
+            { label: 'ACTIVE VOLUNTEERS', value: stats.volunteers, border: '#C77DFF' },
+            { label: 'TODAY DISPATCHES', value: stats.today, border: '#6EE7B7' },
+            { label: 'DISPATCH SUCCESS', value: `${stats.rate}%`, border: '#D9D9D9' },
           ].map((card) => (
             <div key={card.label} style={{ ...glassCard, padding: '16px', borderLeft: `3px solid ${card.border}` }}>
-              <div style={{ fontSize: '26px', color: '#FFFFFF', fontWeight: 500 }}>{card.value}</div>
-              <div style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '8px' }}>{card.label}</div>
+              <div style={{ fontSize: '32px', color: '#FFFFFF', fontWeight: 500 }}>{card.value}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(217,217,217,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '8px' }}>{card.label}</div>
             </div>
           ))}
         </div>

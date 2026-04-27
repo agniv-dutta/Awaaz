@@ -12,7 +12,7 @@ export function BackgroundLayer() {
           inset: 0,
           zIndex: 0,
           background:
-            'radial-gradient(ellipse at 65% 35%, #FF9E00 0%, #E85D00 25%, #9B3000 50%, #1A1A1A 85%)',
+            'radial-gradient(ellipse at 68% 30%, rgba(255,158,0,0.75) 0%, rgba(180,70,0,0.6) 22%, rgba(80,25,0,0.7) 45%, #0F0804 80%)',
           pointerEvents: 'none',
         }}
       />

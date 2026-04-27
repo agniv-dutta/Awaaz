@@ -61,8 +61,11 @@ export function LiveFeed() {
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const isOld = new Date().getTime() - new Date(item.timestamp).getTime() > 2 * 60 * 60 * 1000
-            const isViolet = item.category === 'MEDICAL' || item.category === 'SHELTER' || item.category === 'MENTAL_HEALTH'
-            const isSilver = item.category === 'EDUCATION' || item.category === 'LEGAL' || item.category === 'OTHER'
+            const getCategoryVariant = (cat: string): 'orange' | 'violet' | 'silver' => {
+              if (cat === 'FOOD' || cat === 'MEDICAL') return 'orange';
+              if (cat === 'MENTAL_HEALTH' || cat === 'LEGAL') return 'violet';
+              return 'silver';
+            };
 
             return (
               <motion.div
@@ -80,7 +83,7 @@ export function LiveFeed() {
                 }}
               >
                 {/* Category badge */}
-                <Badge variant={isSilver ? 'silver' : isViolet ? 'medium' : 'processed'}>
+                <Badge variant={getCategoryVariant(item.category)}>
                   {CATEGORY_LABELS[item.category] || item.category}
                 </Badge>
 

@@ -10,11 +10,8 @@ interface NeedCardProps {
 }
 
 export function NeedCard({ need, onDispatch, weatherCondition = 'clear' }: NeedCardProps) {
-  const displayWard = (wardName: string) => {
-    if (wardName && wardName.length === 36 && wardName.includes('-')) {
-      return 'Mumbai Ward'
-    }
-    return wardName || 'Mumbai Ward'
+  const displayWard = () => {
+    return (need as any).wardName ?? (need as any).ward?.name ?? 'Dharavi'
   }
 
   const shouldPulseShelter = (weatherCondition === 'rain' || weatherCondition === 'storm') && need.category === 'SHELTER'
@@ -25,13 +22,17 @@ export function NeedCard({ need, onDispatch, weatherCondition = 'clear' }: NeedC
     need.urgency === 'MEDIUM' ? C.violet :
     '#D9D9D9'
 
-  const isViolet = need.category === 'MEDICAL' || need.category === 'MENTAL_HEALTH'
-  const isSilver = need.category === 'SHELTER' || need.category === 'EDUCATION' || need.category === 'LEGAL' || need.category === 'OTHER'
+  const getCategoryVariant = (cat: string): 'orange' | 'violet' | 'silver' => {
+    if (cat === 'FOOD' || cat === 'MEDICAL') return 'orange';
+    if (cat === 'MENTAL_HEALTH' || cat === 'LEGAL') return 'violet';
+    return 'silver';
+  };
 
-  const badgeVariant = 
-    need.urgency === 'CRITICAL' ? 'critical' :
-    need.urgency === 'HIGH' ? 'high' :
-    need.urgency === 'MEDIUM' ? 'medium' : 'low'
+  const getUrgencyVariant = (urg: string): 'orange' | 'violet' | 'silver' => {
+    if (urg === 'CRITICAL' || urg === 'HIGH') return 'orange';
+    if (urg === 'MEDIUM') return 'violet';
+    return 'silver';
+  };
 
   return (
     <div 
@@ -62,12 +63,12 @@ export function NeedCard({ need, onDispatch, weatherCondition = 'clear' }: NeedC
       {/* Left: badges */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', flexShrink: 0 }}>
         {/* Category badge */}
-        <Badge variant={isSilver ? 'silver' : isViolet ? 'medium' : 'processed'}>
+        <Badge variant={getCategoryVariant(need.category)}>
           {CATEGORY_LABELS[need.category] || need.category}
         </Badge>
 
         {/* Urgency badge */}
-        <Badge variant={badgeVariant}>
+        <Badge variant={getUrgencyVariant(need.urgency)}>
           {URGENCY_LABELS[need.urgency] || need.urgency}
         </Badge>
       </div>
@@ -75,7 +76,7 @@ export function NeedCard({ need, onDispatch, weatherCondition = 'clear' }: NeedC
       {/* Center: ward name */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <span style={{ fontSize: '15px', fontWeight: 500, color: '#FFFFFF' }}>
-          {displayWard((need as any).ward_name || need.ward_id)}
+          {displayWard()}
         </span>
         <span style={{ 
           fontSize: '13px', 

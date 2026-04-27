@@ -27,10 +27,10 @@ export function Sidebar() {
   }
 
   const isDark = sidebarMode === 'dark'
-  const bgColor = isDark ? 'rgba(15, 10, 5, 0.92)' : '#D9D9D9'
+  const bgColor = isDark ? 'rgba(8, 5, 3, 0.96)' : '#D9D9D9'
   const borderColor = isDark ? 'rgba(255, 158, 0, 0.15)' : 'rgba(0, 0, 0, 0.1)'
-  const textMuted = isDark ? '#D9D9D9' : 'rgba(26, 26, 26, 0.55)'
-  const activeItemBg = isDark ? 'rgba(255, 158, 0, 0.15)' : 'rgba(26, 26, 26, 0.12)'
+  const textMuted = isDark ? 'rgba(217, 217, 217, 0.55)' : 'rgba(26, 26, 26, 0.55)'
+  const activeItemBg = isDark ? 'rgba(255, 158, 0, 0.14)' : 'rgba(26, 26, 26, 0.12)'
   const activeItemColor = isDark ? '#FF9E00' : '#1A1A1A'
   const hoverBg = isDark ? 'rgba(255, 158, 0, 0.08)' : 'rgba(26, 26, 26, 0.08)'
   const logoColor = isDark ? '#FF9E00' : '#1A1A1A'
@@ -95,14 +95,14 @@ export function Sidebar() {
                 alignItems: 'center',
                 gap: '10px',
                 padding: '10px 16px',
-                margin: '2px 10px',
-                borderRadius: '10px',
+                margin: isDark ? (isActive ? '2px 10px 2px 0' : '2px 10px') : '2px 10px',
+                borderRadius: isActive ? '0 10px 10px 0' : '10px',
                 background: isActive ? activeItemBg : 'transparent',
                 color: isActive ? activeItemColor : textMuted,
                 border: isDark
                   ? isActive ? '1px solid rgba(255, 158, 0, 0.25)' : '1px solid transparent'
                   : isActive ? '1px solid rgba(26, 26, 26, 0.2)' : '1px solid transparent',
-                borderLeft: isDark ? '' : isActive ? '3px solid #1A1A1A' : '',
+                borderLeft: isDark ? (isActive ? '3px solid #FF9E00' : '3px solid transparent') : (isActive ? '3px solid #1A1A1A' : ''),
                 fontSize: '14px',
                 fontWeight: isActive ? 500 : 400,
                 textDecoration: 'none',

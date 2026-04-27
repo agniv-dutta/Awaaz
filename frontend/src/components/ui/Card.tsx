@@ -6,10 +6,10 @@ export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       style={{
-        background: 'rgba(26, 26, 26, 0.65)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 158, 0, 0.18)',
+        background: 'rgba(10, 7, 4, 0.78)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 158, 0, 0.14)',
         borderRadius: '16px',
         ...style,
       }}

@@ -48,17 +48,20 @@ const MOCK_REPORTS: ReportItem[] = [
 ]
 
 const glassCard: React.CSSProperties = {
-  background: 'rgba(26, 26, 26, 0.72)',
-  border: '1px solid rgba(255, 158, 0, 0.18)',
+  background: 'rgba(10, 7, 4, 0.78)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 158, 0, 0.14)',
   borderRadius: '16px',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
 }
 
 export function Reports() {
   const isMobile = useIsMobile(980)
   const [activeTab, setActiveTab] = useState<'submit' | 'browse'>('submit')
   const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
+  const [ward, setWard] = useState('')
+  const [urgency, setUrgency] = useState('')
   const [detectedLanguage, setDetectedLanguage] = useState('')
   const [originalDescription, setOriginalDescription] = useState('')
   const [wasTranslated, setWasTranslated] = useState(false)
@@ -114,6 +117,9 @@ export function Reports() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 700))
       setDescription('')
+      setCategory('')
+      setWard('')
+      setUrgency('')
       setAnalysis(null)
       setDetectedLanguage('')
       setOriginalDescription('')
@@ -161,53 +167,81 @@ export function Reports() {
 
         {activeTab === 'submit' ? (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 58%) minmax(0, 42%)', gap: '20px' }}>
-            <div style={{ ...glassCard, padding: '18px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <label style={{ fontSize: '12px', color: '#D9D9D9', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Report Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  onBlur={onDescriptionBlur}
-                  rows={9}
-                  placeholder="Describe the situation in as much detail as possible..."
-                  style={{
-                    width: '100%',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(217,217,217,0.26)',
-                    background: 'rgba(255,255,255,0.02)',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    lineHeight: 1.6,
-                    padding: '12px 14px',
-                    outline: 'none',
-                    resize: 'vertical',
-                    fontFamily: 'inherit',
-                  }}
-                />
+            <div style={{ ...glassCard, padding: '28px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {/* CATEGORY */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.06em' }}>Category</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {['Food', 'Medical', 'Shelter', 'Education', 'Legal', 'Mental Health', 'Elderly Care', 'Other'].map(cat => {
+                      const isActive = category === cat;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setCategory(cat)}
+                          style={{
+                            height: '44px',
+                            borderRadius: '10px',
+                            background: isActive ? 'rgba(255,158,0,0.15)' : 'rgba(255,255,255,0.04)',
+                            border: isActive ? '1px solid rgba(255,158,0,0.5)' : '1px solid rgba(255,158,0,0.15)',
+                            color: isActive ? '#FF9E00' : '#D9D9D9',
+                            fontSize: '13px',
+                            fontWeight: isActive ? 500 : 400,
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          {cat}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', color: 'rgba(217,217,217,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Language
-                  </span>
-                  {['auto', 'en', 'hi', 'mr', 'gu'].map((lang) => {
-                    const active = (detectedLanguage || 'auto').toLowerCase() === lang
-                    return (
-                      <span
-                        key={lang}
-                        style={{
-                          fontSize: '11px',
-                          padding: '4px 10px',
-                          borderRadius: '999px',
-                          border: `1px solid ${active ? '#C77DFF' : 'rgba(217,217,217,0.25)'}`,
-                          color: active ? '#C77DFF' : '#D9D9D9',
-                        }}
-                      >
-                        {lang.toUpperCase()}
-                      </span>
-                    )
-                  })}
+                {/* DESCRIPTION */}
+                <div style={{ marginTop: '0px' }}>
+                  <div style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.06em' }}>Description</div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={onDescriptionBlur}
+                    placeholder="Describe the situation in detail — who needs help, where exactly, how many people affected..."
+                    style={{
+                      width: '100%',
+                      minHeight: '120px',
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid rgba(255,158,0,0.2)',
+                      borderRadius: '10px',
+                      color: '#FFFFFF',
+                      fontSize: '15px',
+                      padding: '12px 16px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                    {['auto', 'en', 'mr', 'hi', 'gu'].map((lang) => {
+                      const active = (detectedLanguage || 'auto').toLowerCase() === lang
+                      return (
+                        <span
+                          key={lang}
+                          style={{
+                            fontSize: '12px',
+                            padding: '4px 14px',
+                            borderRadius: '20px',
+                            border: active ? '1px solid rgba(255,158,0,0.4)' : '1px solid rgba(217,217,217,0.2)',
+                            background: active ? 'rgba(255,158,0,0.15)' : 'transparent',
+                            color: active ? '#FF9E00' : 'rgba(217,217,217,0.5)',
+                            cursor: 'default',
+                          }}
+                        >
+                          {lang === 'auto' ? 'AUTO' : lang.toUpperCase()}
+                        </span>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 {wasTranslated && (
@@ -223,6 +257,7 @@ export function Reports() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: '10px',
+                      marginTop: '12px',
                     }}
                   >
                     <span style={{ fontSize: '12px', color: '#D9D9D9' }}>Translated to English for consistent triage.</span>
@@ -243,19 +278,84 @@ export function Reports() {
                   </motion.div>
                 )}
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* WARD & URGENCY */}
+                <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.06em' }}>Ward</div>
+                    <select
+                      value={ward}
+                      onChange={(e) => setWard(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        background: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,158,0,0.2)',
+                        borderRadius: '10px',
+                        color: '#FFFFFF',
+                        fontSize: '14px',
+                        padding: '0 16px',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="" disabled>Select Ward</option>
+                      <option value="Ward 1 – Dharavi">Ward 1 – Dharavi</option>
+                      <option value="Ward 2 – Kurla East">Ward 2 – Kurla East</option>
+                      <option value="Ward 3 – Govandi">Ward 3 – Govandi</option>
+                      <option value="Ward 4 – Mankhurd">Ward 4 – Mankhurd</option>
+                      <option value="Ward 5 – Bandra West">Ward 5 – Bandra West</option>
+                    </select>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.06em' }}>Urgency</div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {[
+                        { val: 'CRITICAL', bg: '#FF9E00', color: '#1A1A1A', border: 'none' },
+                        { val: 'HIGH', bg: '#E05A00', color: '#FFFFFF', border: 'none' },
+                        { val: 'MEDIUM', bg: 'rgba(199,125,255,0.2)', color: '#C77DFF', border: '1px solid rgba(199,125,255,0.4)' },
+                        { val: 'LOW', bg: 'rgba(217,217,217,0.1)', color: '#D9D9D9', border: '1px solid rgba(217,217,217,0.3)' }
+                      ].map(u => {
+                        const isActive = urgency === u.val;
+                        return (
+                          <button
+                            key={u.val}
+                            onClick={() => setUrgency(u.val)}
+                            style={{
+                              background: isActive ? u.bg : 'transparent',
+                              color: isActive ? u.color : 'rgba(217,217,217,0.4)',
+                              border: isActive ? (u.border !== 'none' ? u.border : '1px solid transparent') : '1px solid rgba(217,217,217,0.15)',
+                              borderRadius: '8px',
+                              padding: '8px 16px',
+                              fontSize: '13px',
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            {u.val}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     onClick={runAiAnalyze}
                     disabled={analyzing || !description.trim()}
                     style={{
+                      height: '44px',
+                      padding: '0 20px',
                       borderRadius: '10px',
-                      border: '1px solid rgba(199,125,255,0.35)',
                       background: 'rgba(199,125,255,0.12)',
+                      border: '1px solid rgba(199,125,255,0.3)',
                       color: '#C77DFF',
+                      fontSize: '14px',
                       cursor: analyzing || !description.trim() ? 'not-allowed' : 'pointer',
-                      padding: '10px 14px',
-                      fontSize: '13px',
-                      opacity: 1,
+                      opacity: analyzing || !description.trim() ? 0.6 : 1,
                       fontFamily: 'inherit',
                     }}
                   >
@@ -266,24 +366,25 @@ export function Reports() {
                     onClick={submitReport}
                     disabled={submitting || !description.trim()}
                     style={{
+                      height: '44px',
+                      padding: '0 28px',
                       borderRadius: '10px',
-                      border: '1px solid rgba(255,158,0,0.45)',
                       background: '#FF9E00',
+                      border: 'none',
                       color: '#1A1A1A',
+                      fontSize: '14px',
+                      fontWeight: 500,
                       cursor: submitting || !description.trim() ? 'not-allowed' : 'pointer',
-                      padding: '10px 16px',
-                      fontSize: '13px',
-                      fontWeight: 600,
                       opacity: submitting || !description.trim() ? 0.6 : 1,
                       fontFamily: 'inherit',
                     }}
                   >
                     {submitting ? 'Submitting...' : 'Submit Report'}
                   </button>
-                </div>
 
-                <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.55)' }}>
-                  AI analysis runs through backend model routing.
+                  <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.35)' }}>
+                    AI analysis runs through Gemini to auto-detect category and urgency
+                  </div>
                 </div>
               </div>
             </div>

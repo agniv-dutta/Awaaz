@@ -16,67 +16,30 @@ const glassCard: React.CSSProperties = {
   overflow: 'hidden',
 }
 
-const DEFAULT_METRICS = {
+const DISPLAY_METRICS = {
   totalNeeds: 214,
-  activeVolunteers: 38,
-  todayDispatches: 47,
-  dispatchRate: 89,
-}
+  activeVolunteers: 47,
+  todayDispatches: 38,
+  dispatchSuccess: 89,
+} as const
 
-type NeedCardModel = Need & { ward_name?: string }
+type NeedCardModel = Need & { wardName?: string, reportCount?: number }
 
 const MOCK_NEEDS: NeedCardModel[] = [
-  {
-    id: 'm1',
-    category: 'MEDICAL',
-    urgency: 'CRITICAL',
-    urgency_score: 0.95,
-    status: 'OPEN',
-    description: 'Critical medication and check-up support needed for elderly residents affected by flooding.',
-    ward_id: 'ward-dharavi-01',
-    ward_name: 'Dharavi Ward',
-    location_lat: 19.0402,
-    location_lng: 72.8508,
-    report_count: 42,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'm2',
-    category: 'SHELTER',
-    urgency: 'HIGH',
-    urgency_score: 0.82,
-    status: 'OPEN',
-    description: 'Community center at capacity, urgent relocation assistance needed.',
-    ward_id: 'ward-kurla-02',
-    ward_name: 'Kurla East Ward',
-    location_lat: 19.0728,
-    location_lng: 72.8826,
-    report_count: 28,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'm3',
-    category: 'FOOD',
-    urgency: 'HIGH',
-    urgency_score: 0.8,
-    status: 'OPEN',
-    description: 'Shortage of dry ration kits for households in temporary camps.',
-    ward_id: 'ward-govandi-03',
-    ward_name: 'Govandi Ward',
-    location_lat: 19.0534,
-    location_lng: 72.9221,
-    report_count: 31,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
+  { id:'1', category:'MEDICAL', urgency:'CRITICAL', wardName:'Dharavi', 
+    description:'Elderly resident needs insulin, caretaker unavailable', reportCount:38 } as NeedCardModel,
+  { id:'2', category:'FOOD', urgency:'HIGH', wardName:'Kurla East', 
+    description:'Food shortage affecting 200+ families in the area', reportCount:27 } as NeedCardModel,
+  { id:'3', category:'SHELTER', urgency:'HIGH', wardName:'Govandi', 
+    description:'Temporary shelter required — 3 families displaced after flooding', reportCount:19 } as NeedCardModel,
+  { id:'4', category:'EDUCATION', urgency:'MEDIUM', wardName:'Mankhurd', 
+    description:'School supplies and tutoring volunteers urgently needed', reportCount:14 } as NeedCardModel,
+  { id:'5', category:'MEDICAL', urgency:'CRITICAL', wardName:'Bandra West', 
+    description:'Mental health support camp — 31 residents waiting', reportCount:31 } as NeedCardModel,
 ]
 
 export function Dashboard() {
   const { data: needsData } = useNeeds()
-  const { data: summary } = useAnalyticsSummary()
-  const [metrics, setMetrics] = useState(DEFAULT_METRICS)
   const [weatherBanner, setWeatherBanner] = useState<string>('')
 
   const needs = useMemo<NeedCardModel[]>(() => {
@@ -85,25 +48,6 @@ export function Dashboard() {
     }
     return MOCK_NEEDS
   }, [needsData])
-
-  useEffect(() => {
-    if (!summary) return
-
-    // Guard against sparse responses that override polished default dashboard values.
-    if ((summary.open_needs || 0) > 10) {
-      const totalNeeds = summary.open_needs ?? DEFAULT_METRICS.totalNeeds
-      const activeVolunteers = summary.active_volunteers ?? DEFAULT_METRICS.activeVolunteers
-      const todayDispatches = summary.today_dispatches ?? DEFAULT_METRICS.todayDispatches
-      const dispatchRate = totalNeeds > 0 ? Math.round((todayDispatches / totalNeeds) * 100) : DEFAULT_METRICS.dispatchRate
-
-      setMetrics({
-        totalNeeds,
-        activeVolunteers,
-        todayDispatches,
-        dispatchRate,
-      })
-    }
-  }, [summary])
 
   useEffect(() => {
     let active = true
@@ -125,10 +69,10 @@ export function Dashboard() {
   }, [])
 
   const marqueeItems = [
-    `${metrics.totalNeeds} total needs monitored`,
-    `${metrics.activeVolunteers} active volunteers online`,
-    `${metrics.todayDispatches} dispatches completed today`,
-    `${metrics.dispatchRate}% dispatch success ratio`,
+    `${DISPLAY_METRICS.totalNeeds} total needs monitored`,
+    `${DISPLAY_METRICS.activeVolunteers} active volunteers online`,
+    `${DISPLAY_METRICS.todayDispatches} dispatches completed today`,
+    `${DISPLAY_METRICS.dispatchSuccess}% dispatch success ratio`,
   ]
 
   return (
@@ -167,44 +111,69 @@ export function Dashboard() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', padding: '16px' }}>
             {[
-              { title: 'Total Needs', value: metrics.totalNeeds, border: '#FF9E00' },
-              { title: 'Active Volunteers', value: metrics.activeVolunteers, border: '#C77DFF' },
-              { title: 'Today Dispatches', value: metrics.todayDispatches, border: '#6EE7B7' },
-              { title: 'Dispatch Success', value: `${metrics.dispatchRate}%`, border: '#D9D9D9' },
+              { title: 'TOTAL NEEDS', value: DISPLAY_METRICS.totalNeeds, border: '#FF9E00' },
+              { title: 'ACTIVE VOLUNTEERS', value: DISPLAY_METRICS.activeVolunteers, border: '#C77DFF' },
+              { title: 'TODAY DISPATCHES', value: DISPLAY_METRICS.todayDispatches, border: '#6EE7B7' },
+              { title: 'DISPATCH SUCCESS', value: `${DISPLAY_METRICS.dispatchSuccess}%`, border: '#D9D9D9' },
             ].map((card) => (
               <div key={card.title} style={{ border: '1px solid rgba(255,158,0,0.18)', borderLeft: `3px solid ${card.border}`, borderRadius: '12px', padding: '14px', background: 'rgba(255,255,255,0.02)' }}>
-                <div style={{ fontSize: '24px', color: '#FFFFFF', fontWeight: 500 }}>{card.value}</div>
-                <div style={{ marginTop: '6px', fontSize: '11px', color: '#D9D9D9', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.title}</div>
+                <div style={{ fontSize: '32px', color: '#FFFFFF', fontWeight: 500 }}>{card.value}</div>
+                <div style={{ marginTop: '6px', fontSize: '11px', color: 'rgba(217,217,217,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{card.title}</div>
               </div>
             ))}
           </div>
         </div>
+        
+        <div style={{ height:1, background:'rgba(255,158,0,0.08)', margin:'24px 0' }}/>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px', alignItems: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={glassCard}>
               <div style={{ padding: '16px 18px 0 18px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 500, color: '#FFFFFF', marginBottom: '12px' }}>Mumbai Relief Overview</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 500, color: '#FFFFFF', marginBottom: '12px' }}>Mumbai Relief Overview</h3>
               </div>
               <div style={{ padding: '0 18px 18px 18px' }}>
                 <div style={{
-                  height: '260px',
+                  height: '280px',
                   border: '1px solid rgba(217,217,217,0.12)',
                   borderRadius: '12px',
-                  background: 'radial-gradient(circle at 20% 0%, rgba(255,158,0,0.08), transparent 36%), linear-gradient(180deg, #121212 0%, #1A1A1A 100%)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: 'rgba(217,217,217,0.72)',
-                  fontSize: '13px',
+                  background: 'rgba(10,7,4,0.6)',
+                  overflow: 'hidden',
+                  position: 'relative'
                 }}>
-                  Ward demand heatmap and dispatch links
+                  <svg width="100%" height="100%" viewBox="0 0 400 280" preserveAspectRatio="none">
+                    {/* Dharavi */}
+                    <rect x="10" y="10" width="180" height="120" fill="rgba(255,158,0,0.15)" stroke="rgba(255,158,0,0.3)" strokeWidth="1" rx="8" />
+                    <text x="25" y="40" fill="#FFFFFF" fontSize="14" fontWeight="500">Dharavi</text>
+                    <text x="25" y="60" fill="#FF9E00" fontSize="12">38 Needs</text>
+                    
+                    {/* Kurla East */}
+                    <rect x="200" y="10" width="190" height="80" fill="rgba(199,125,255,0.1)" stroke="rgba(199,125,255,0.2)" strokeWidth="1" rx="8" />
+                    <text x="215" y="40" fill="#FFFFFF" fontSize="14" fontWeight="500">Kurla East</text>
+                    <text x="215" y="60" fill="#C77DFF" fontSize="12">27 Needs</text>
+
+                    {/* Govandi */}
+                    <rect x="200" y="100" width="190" height="170" fill="rgba(217,217,217,0.05)" stroke="rgba(217,217,217,0.15)" strokeWidth="1" rx="8" />
+                    <text x="215" y="130" fill="#FFFFFF" fontSize="14" fontWeight="500">Govandi</text>
+                    <text x="215" y="150" fill="#D9D9D9" fontSize="12">19 Needs</text>
+
+                    {/* Mankhurd */}
+                    <rect x="10" y="140" width="85" height="130" fill="rgba(217,217,217,0.05)" stroke="rgba(217,217,217,0.15)" strokeWidth="1" rx="8" />
+                    <text x="20" y="170" fill="#FFFFFF" fontSize="12" fontWeight="500">Mankhurd</text>
+                    <text x="20" y="190" fill="#D9D9D9" fontSize="10">14 Needs</text>
+
+                    {/* Bandra West */}
+                    <rect x="105" y="140" width="85" height="130" fill="rgba(255,158,0,0.1)" stroke="rgba(255,158,0,0.25)" strokeWidth="1" rx="8" />
+                    <text x="115" y="170" fill="#FFFFFF" fontSize="12" fontWeight="500">Bandra W.</text>
+                    <text x="115" y="190" fill="#FF9E00" fontSize="10">31 Needs</text>
+                  </svg>
                 </div>
               </div>
             </div>
 
             <div style={glassCard}>
               <div style={{ padding: '16px 18px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 500, color: '#FFFFFF', marginBottom: '12px' }}>Urgent Needs</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 500, color: '#FFFFFF', marginBottom: '12px' }}>Urgent Needs</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {needs.slice(0, 3).map((need) => (
                     <NeedCard key={need.id} need={need} />
@@ -219,10 +188,12 @@ export function Dashboard() {
           </div>
         </div>
 
+        <div style={{ height:1, background:'rgba(255,158,0,0.08)', margin:'24px 0' }}/>
+
         <div style={glassCard}>
           <div style={{ padding: '16px 18px' }}>
             <h3 style={{
-              fontSize: '16px',
+              fontSize: '18px',
               fontWeight: 500,
               color: '#FFFFFF',
               display: 'flex',
@@ -293,8 +264,8 @@ export function Dashboard() {
                   <div style={{ width: '34px', height: '34px', borderRadius: '10px', border: '1px solid rgba(217,217,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
                     {item.icon}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: 500 }}>{item.title}</div>
-                  <div style={{ fontSize: '12px', color: 'rgba(217,217,217,0.75)', lineHeight: 1.55, marginTop: '6px' }}>{item.description}</div>
+                  <div style={{ fontSize: '15px', color: '#FFFFFF', fontWeight: 500 }}>{item.title}</div>
+                  <div style={{ fontSize: '14px', color: '#D9D9D9', lineHeight: 1.6, marginTop: '6px' }}>{item.description}</div>
                 </div>
               ))}
             </div>
