@@ -201,7 +201,7 @@ export default function VolunteersPage() {
         </div>
 
         {/* Filters */}
-        <div style={glassCard, padding: '20px', marginBottom: '24px' }}>
+        <div style={{ ...glassCard, padding: '20px', marginBottom: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
             <div style={{ position: 'relative' }}>
               <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(217, 217, 217, 0.5)' }} />
@@ -455,7 +455,7 @@ export default function VolunteersPage() {
 
         {/* AI Insight */}
         {insight && view === 'grid' && (
-          <div style={glassCard, padding: '20px', marginTop: '24px' }}>
+          <div style={{ ...glassCard, padding: '20px', marginTop: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
               <Users size={20} style={{ color: '#FF9E00' }} />
               <h3 style={{ fontSize: '18px', fontWeight: 500, color: '#FFFFFF' }}>AI Insight</h3>
