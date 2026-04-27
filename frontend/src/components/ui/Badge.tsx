@@ -1,5 +1,4 @@
 import type { HTMLAttributes } from 'react';
-import { C } from '../../utils/colors'
 
 export type BadgeVariant = 'orange' | 'violet' | 'silver' | 'green' | 'red';
 

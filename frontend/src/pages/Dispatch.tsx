@@ -168,7 +168,7 @@ export function Dispatch() {
     setTimeout(() => setFlashingId(null), 600)
   })
 
-  const tableData = dispatches && dispatches.length > 0 ? (dispatches as DispatchRowModel[]) : MOCK_DISPATCHES;
+  const tableData = dispatches && dispatches.length > 0 ? (dispatches as any) : MOCK_DISPATCHES;
 
   const refreshSuggestion = async () => {
     setSuggestionLoading(true)
@@ -188,9 +188,9 @@ export function Dispatch() {
     refreshSuggestion()
   }, [])
 
-  const activeCount = tableData.filter((d) => d.status === 'IN_PROGRESS' || d.status === 'ACCEPTED').length
-  const pendingCount = tableData.filter((d) => d.status === 'PENDING_ACCEPT').length
-  const completedCount = tableData.filter((d) => d.status === 'COMPLETED').length
+  const activeCount = tableData.filter((d: any) => d.status === 'IN_PROGRESS' || d.status === 'ACCEPTED').length
+  const pendingCount = tableData.filter((d: any) => d.status === 'PENDING_ACCEPT').length
+  const completedCount = tableData.filter((d: any) => d.status === 'COMPLETED').length
   const tableColumns = isMobile ? '2.2fr 1.4fr 1.2fr 1.2fr 0.9fr' : '2fr 1.5fr 1.5fr 1fr 1fr'
   const tableMinWidth = isMobile ? '760px' : '100%'
 
@@ -292,7 +292,7 @@ export function Dispatch() {
               {tableData.length === 0 ? (
                 <EmptyState emptyMessage="No dispatches yet. Assign a volunteer to an urgent need to get started." />
               ) : (
-                tableData.map((d) => (
+                tableData.map((d: any) => (
                   <DispatchRow
                     key={d.id}
                     dispatch={d}

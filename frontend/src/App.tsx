@@ -14,7 +14,7 @@ const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const NeedsMap = lazy(() => import('./pages/NeedsMap').then((m) => ({ default: m.NeedsMap })))
 const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
-const Volunteers = lazy(() => import('./pages/Volunteers').then((m) => ({ default: m.Volunteers })))
+const Volunteers = lazy(() => import('./pages/Volunteers'))
 const Dispatch = lazy(() => import('./pages/Dispatch').then((m) => ({ default: m.Dispatch })))
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
 const Profile = lazy(() => import('./pages/Profile').then((m) => ({ default: m.Profile })))

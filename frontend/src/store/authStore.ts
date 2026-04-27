@@ -12,7 +12,7 @@ interface AuthState {
   loadFromStorage: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem('token'),
   user: null,
   isLoading: false,

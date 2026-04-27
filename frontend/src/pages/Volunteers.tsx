@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Map, Users } from 'lucide-react'
-import { AnimatePresence } from 'framer-motion'
+import { Search, Users } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { VolunteerCard } from '../components/volunteers/VolunteerCard'
 import { useVolunteers } from '../hooks/useVolunteers'
@@ -32,7 +32,7 @@ interface VolunteerWithUser extends Volunteer {
   distance: string;
   lat: number;
   lng: number;
-  reliability: number;
+  reliability_score: number;
   completedTasks: number;
 }
 
@@ -41,7 +41,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'1', name:'Rahul Kulkarni',  initials:'RK', 
     lat:19.0398, lng:72.8514,  // Dharavi
     ward:'Dharavi Ward', skills:['MEDICAL','LOGISTICS'], 
-    available:true, reliability:0.92, distance:'1.2km', completedTasks:9,
+    available:true, reliability_score:0.92, distance:'1.2km', completedTasks:9,
     availability_schedule:{ mon:['09:00–13:00','15:00–19:00'], tue:['09:00–13:00'], 
       wed:[], thu:['10:00–18:00'], fri:['09:00–13:00'], sat:['10:00–14:00'], sun:[] },
     is_active: true, home_ward_id: '1', completed_tasks: 12, user_id: 'u1',
@@ -53,7 +53,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'2', name:'Ananya Sharma', initials:'AN',
     lat:19.0728, lng:72.8826,  // Kurla
     ward:'Kurla East Ward', skills:['TEACHING','TRANSLATION'],
-    available:true, reliability:0.87, distance:'2.4km', completedTasks:7,
+    available:true, reliability_score:0.87, distance:'2.4km', completedTasks:7,
     availability_schedule:{ mon:['10:00–14:00'], tue:['10:00–14:00','16:00–20:00'],
       wed:['10:00–14:00'], thu:[], fri:['10:00–18:00'], sat:[], sun:['11:00–15:00'] },
     is_active: true, home_ward_id: '2', completed_tasks: 8, user_id: 'u2',
@@ -65,7 +65,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'3', name:'Devraj Patil', initials:'DE',
     lat:19.0474, lng:72.9195,  // Govandi
     ward:'Govandi Ward', skills:['LOGISTICS','COOKING'],
-    available:false, reliability:0.78, distance:'3.1km', completedTasks:5,
+    available:false, reliability_score:0.78, distance:'3.1km', completedTasks:5,
     availability_schedule:{ mon:[], tue:['15:00–21:00'], wed:['15:00–21:00'],
       thu:['15:00–21:00'], fri:['15:00–21:00'], sat:['10:00–21:00'], sun:['10:00–21:00'] },
     is_active: false, home_ward_id: '3', completed_tasks: 5, user_id: 'u3',
@@ -77,7 +77,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'4', name:'Meera Iyer', initials:'ME',
     lat:19.0596, lng:72.8295,  // Bandra
     ward:'Bandra West Ward', skills:['LEGAL','MEDICAL'],
-    available:true, reliability:0.95, distance:'0.8km', completedTasks:12,
+    available:true, reliability_score:0.95, distance:'0.8km', completedTasks:12,
     availability_schedule:{ mon:['09:00–13:00'], tue:['09:00–13:00'],
       wed:['09:00–13:00'], thu:['09:00–13:00'], fri:['09:00–13:00'], sat:[], sun:[] },
     is_active: true, home_ward_id: '4', completed_tasks: 15, user_id: 'u4',
@@ -89,7 +89,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'5', name:'Siddharth Nair', initials:'SN',
     lat:19.0550, lng:72.8380,  // Near Bandra
     ward:'Borivali Ward', skills:['MEDICAL','TECH'],
-    available:true, reliability:0.89, distance:'1.7km', completedTasks:8,
+    available:true, reliability_score:0.89, distance:'1.7km', completedTasks:8,
     availability_schedule:{ mon:['14:00–20:00'], tue:['14:00–20:00'],
       wed:[], thu:['14:00–20:00'], fri:['14:00–20:00'], sat:['10:00–18:00'], sun:[] },
     is_active: true, home_ward_id: '5', completed_tasks: 10, user_id: 'u5',
@@ -101,7 +101,7 @@ const MOCK_VOLUNTEERS: VolunteerWithUser[] = [
     id:'6', name:'Priya Desai', initials:'PD',
     lat:19.0444, lng:72.9347,  // Mankhurd
     ward:'Mankhurd Ward', skills:['TEACHING','COOKING'],
-    available:false, reliability:0.73, distance:'4.2km', completedTasks:4,
+    available:false, reliability_score:0.73, distance:'4.2km', completedTasks:4,
     availability_schedule:{ mon:[], tue:[], wed:['11:00–17:00'],
       thu:['11:00–17:00'], fri:[], sat:['09:00–15:00'], sun:['09:00–15:00'] },
     is_active: false, home_ward_id: '6', completed_tasks: 4, user_id: 'u6',
@@ -119,7 +119,8 @@ const glassCard: React.CSSProperties = {
 }
 
 export default function VolunteersPage() {
-  const { data: volunteers = MOCK_VOLUNTEERS, loading, error } = useVolunteers()
+  const { data: apiVolunteers, isLoading, error } = useVolunteers()
+  const volunteers = ((apiVolunteers as VolunteerWithUser[] | undefined) ?? MOCK_VOLUNTEERS)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedVolunteer, setSelectedVolunteer] = useState<VolunteerWithUser | null>(null)
   const [view, setView] = useState<'grid'|'map'>('grid')
@@ -127,10 +128,10 @@ export default function VolunteersPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState('all')
 
   const filteredVolunteers = useMemo(() => {
-    return volunteers.filter(v => {
-      const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          v.ward.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          v.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    return volunteers.filter((v: any) => {
+      const matchesSearch = (v.name && v.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (v.ward && v.ward.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          v.skills.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))
       const matchesSkill = skillFilter === 'all' || v.skills.includes(skillFilter.toUpperCase())
       const matchesAvailability = availabilityFilter === 'all' || 
         (availabilityFilter === 'available' && v.available) ||
@@ -140,17 +141,17 @@ export default function VolunteersPage() {
   }, [volunteers, searchTerm, skillFilter, availabilityFilter])
 
   const insight = useMemo(() => {
-    if (filteredVolunteers.length === 0) return null
-    return getVolunteerInsight(filteredVolunteers)
-  }, [filteredVolunteers])
+    if (filteredVolunteers.length === 0 || selectedVolunteer === null) return null
+    return getVolunteerInsight(selectedVolunteer as any, [])
+  }, [selectedVolunteer])
 
   const allSkills = useMemo(() => {
     const skills = new Set<string>()
-    volunteers.forEach(v => v.skills.forEach(s => skills.add(s)))
+    volunteers.forEach((v: VolunteerWithUser) => v.skills.forEach((s: string) => skills.add(s)))
     return Array.from(skills).sort()
   }, [volunteers])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <PageWrapper>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -308,7 +309,7 @@ export default function VolunteersPage() {
         {view === 'grid' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
             <AnimatePresence>
-              {filteredVolunteers.map(volunteer => (
+              {filteredVolunteers.map((volunteer: VolunteerWithUser) => (
                 <VolunteerCard
                   key={volunteer.id}
                   volunteer={volunteer}
@@ -338,9 +339,9 @@ export default function VolunteersPage() {
               }}
               onClick={() => setSelectedVolunteer(null)}
             >
-              <div
+              <motion.div
                 style={glassCard}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -400,7 +401,7 @@ export default function VolunteersPage() {
                         Reliability
                       </div>
                       <div style={{ fontSize: '18px', fontWeight: 600, color: '#FFFFFF' }}>
-                        {(selectedVolunteer.reliability * 100).toFixed(0)}%
+                        {(selectedVolunteer.reliability_score * 100).toFixed(0)}%
                       </div>
                     </div>
                     <div>
@@ -448,7 +449,7 @@ export default function VolunteersPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           )}
         </AnimatePresence>

@@ -1,5 +1,4 @@
 import { PageWrapper } from '../components/layout/PageWrapper'
-import { useAnalyticsSummary } from '../hooks/useAnalytics'
 import {
   ResponsiveContainer,
   LineChart,

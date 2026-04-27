@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PageWrapper } from '../components/layout/PageWrapper'
-import { useMapStore } from '../store/mapStore'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { MapContainer, Circle, Tooltip, Popup, useMap } from 'react-leaflet'
+import { MapContainer, Circle, Tooltip, useMap } from 'react-leaflet'
 import { ReliableTileLayer } from '../components/map/ReliableTileLayer'
 import { MAP_CONFIG, URGENCY_COLORS } from '../utils/mapConfig'
 import 'leaflet/dist/leaflet.css'
@@ -32,8 +31,6 @@ const glassCard: React.CSSProperties = {
 
 export function NeedsMap() {
   const isMobile = useIsMobile(980)
-  const selectedWard = useMapStore((s) => s.selectedWardId)
-  const wards = useMapStore((s) => s.wards)
   const [selectedNeed, setSelectedNeed] = useState<any>(null)
   const [filterCategory, setFilterCategory] = useState('All')
   const [filterUrgency, setFilterUrgency] = useState('All')
