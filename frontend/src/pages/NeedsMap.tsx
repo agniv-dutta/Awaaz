@@ -42,6 +42,10 @@ export function NeedsMap() {
   })
 
   const activeVolunteers = volunteers.filter(v => v.is_active && v.current_lat)
+  
+  console.log('🗺️ Volunteers Data:', volunteers.length, 'total')
+  console.log('🗺️ Active Volunteers:', activeVolunteers.length)
+  console.log('🗺️ Sample Volunteer:', activeVolunteers[0])
 
   return (
     <PageWrapper>
@@ -101,10 +105,16 @@ export function NeedsMap() {
               
               {/* Volunteer location markers */}
               {activeVolunteers.map(v => (
-                <Circle key={v.id} center={[v.current_lat!, v.current_lng!]} radius={150}
-                  pathOptions={{ color:'#C77DFF', fillColor:'#C77DFF', fillOpacity:0.5, weight:2 }}
+                <Circle key={v.id} center={[v.current_lat!, v.current_lng!]} radius={300}
+                  pathOptions={{ color:'#4ade80', fillColor:'#4ade80', fillOpacity:0.7, weight:3 }}
                 >
-                  <Tooltip>{v.name} — {v.skills[0]}</Tooltip>
+                  <Tooltip>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontWeight: 'bold' }}>{v.name}</div>
+                      <div>{v.skills[0]}</div>
+                      <div style={{ fontSize: '11px', opacity: 0.8 }}>Active Volunteer</div>
+                    </div>
+                  </Tooltip>
                 </Circle>
               ))}
             </MapContainer>

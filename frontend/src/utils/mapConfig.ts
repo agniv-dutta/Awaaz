@@ -1,11 +1,11 @@
 export const MAP_CONFIG = {
-  // Primary: OpenStreetMap - most reliable, always works
-  PRIMARY_TILE: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  PRIMARY_ATTR: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  // Primary: CartoDB dark tiles - matches app dark theme
+  PRIMARY_TILE: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  PRIMARY_ATTR: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   
-  // Fallback: CartoDB dark tiles
-  FALLBACK_TILE: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  FALLBACK_ATTR: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  // Fallback: Stadia Maps dark theme
+  FALLBACK_TILE: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+  FALLBACK_ATTR: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
 
   // Mumbai center
   MUMBAI_CENTER: [19.0760, 72.8777] as [number, number],

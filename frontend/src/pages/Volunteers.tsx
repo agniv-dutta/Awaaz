@@ -3,7 +3,6 @@ import { Search, Users } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { VolunteerCard } from '../components/volunteers/VolunteerCard'
-import { useVolunteers } from '../hooks/useVolunteers'
 import type { Volunteer } from '../types'
 import { getVolunteerInsight } from '../services/ai'
 import { MapContainer, Circle, Tooltip, useMap } from 'react-leaflet'
@@ -119,8 +118,10 @@ const glassCard: React.CSSProperties = {
 }
 
 export default function VolunteersPage() {
-  const { data: apiVolunteers, isLoading, error } = useVolunteers()
-  const volunteers = ((apiVolunteers as VolunteerWithUser[] | undefined) ?? MOCK_VOLUNTEERS)
+  // Use mock data directly for demo mode
+  const volunteers = MOCK_VOLUNTEERS
+  const isLoading = false
+  const error = null
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedVolunteer, setSelectedVolunteer] = useState<VolunteerWithUser | null>(null)
   const [view, setView] = useState<'grid'|'map'>('grid')
