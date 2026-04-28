@@ -9,7 +9,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:///./awaaz.db
       - key: SECRET_KEY
-        generateValue: true
+        value: awaaz-super-secret-key-change-this-in-production-12345
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
       - key: GEMINI_API_KEY
