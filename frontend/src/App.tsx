@@ -4,13 +4,11 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { BackgroundLayer } from './components/layout/BackgroundLayer'
 import { Sidebar } from './components/layout/Sidebar'
 import { TopBar } from './components/layout/TopBar'
-import { useAuthStore } from './store/authStore'
 
 import { fetchMumbaiWards } from './services/wardData'
 import { useMapStore } from './store/mapStore'
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })))
-const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })))
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const NeedsMap = lazy(() => import('./pages/NeedsMap').then((m) => ({ default: m.NeedsMap })))
 const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
@@ -18,7 +16,6 @@ const Volunteers = lazy(() => import('./pages/Volunteers'))
 const Dispatch = lazy(() => import('./pages/Dispatch').then((m) => ({ default: m.Dispatch })))
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
 const Profile = lazy(() => import('./pages/Profile').then((m) => ({ default: m.Profile })))
-const Register = lazy(() => import('./pages/RegisterPage').then((m) => ({ default: m.Register })))
 
 function RouteLoadingFallback() {
   return (
@@ -78,23 +75,14 @@ function AppShell() {
   )
 }
 
-function AuthGuard() {
-  const { token } = useAuthStore()
-  if (!token) return <Navigate to="/" replace />
-  return <AppShell />
-}
-
 export function App() {
   const setWards = useMapStore((state) => state.setWards)
-  const { loadFromStorage } = useAuthStore()
 
   useEffect(() => {
     fetchMumbaiWards()
       .then((wards) => setWards(wards))
       .catch(() => {})
-    
-    loadFromStorage()
-  }, [setWards, loadFromStorage])
+  }, [setWards])
 
   return (
     <BrowserRouter>
@@ -108,18 +96,22 @@ export function App() {
       >
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          <Route element={<AuthGuard />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/map" element={<NeedsMap />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/volunteers" element={<Volunteers />} />
-            <Route path="/dispatch" element={<Dispatch />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route path="/dashboard" element={<AppShell />}>
+            <Route index element={<Dashboard />} />
+            <Route path="map" element={<NeedsMap />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="volunteers" element={<Volunteers />} />
+            <Route path="dispatch" element={<Dispatch />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
+          {/* Redirect old routes to new structure */}
+          <Route path="/map" element={<Navigate to="/dashboard/map" replace />} />
+          <Route path="/reports" element={<Navigate to="/dashboard/reports" replace />} />
+          <Route path="/volunteers" element={<Navigate to="/dashboard/volunteers" replace />} />
+          <Route path="/dispatch" element={<Navigate to="/dashboard/dispatch" replace />} />
+          <Route path="/analytics" element={<Navigate to="/dashboard/analytics" replace />} />
+          <Route path="/profile" element={<Navigate to="/dashboard/profile" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

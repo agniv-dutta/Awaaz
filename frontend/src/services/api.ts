@@ -11,7 +11,7 @@ export const api = axios.create({
 // Log the actual API URL being used
 console.log('🌐 API BASE URL SET TO:', import.meta.env.VITE_API_BASE_URL || '/api/v1')
 
-// Request interceptor to add JWT token
+// Request interceptor to add JWT token (optional for demo)
 api.interceptors.request.use((config) => {
   console.log('🌐 API REQUEST:', config.method?.toUpperCase(), config.url)
   console.log('🌐 BASE URL:', config.baseURL)
@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
     console.log('🌐 TOKEN ADDED TO REQUEST')
   } else {
-    console.log('🌐 NO TOKEN FOUND')
+    console.log('🌐 NO TOKEN - DEMO MODE')
   }
   
   return config

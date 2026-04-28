@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { C } from '../../utils/colors'
-import { useAuthStore } from '../../store/authStore'
+import { useMockUserStore } from '../../store/mockUserStore'
 import { getMumbaiWeather, type WeatherAlert } from '../../services/weather'
 
 interface TopBarProps {
@@ -8,11 +8,11 @@ interface TopBarProps {
 }
 
 export function TopBar({ title }: TopBarProps) {
-  const { user } = useAuthStore()
+  const { user } = useMockUserStore()
   const [weather, setWeather] = useState<WeatherAlert | null>(null)
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'AD'
+    : 'DU'
 
   useEffect(() => {
     const cacheKey = 'awaaz-weather-cache'
@@ -68,6 +68,23 @@ export function TopBar({ title }: TopBarProps) {
         {title}
       </h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Demo Mode Badge */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          borderRadius: '999px',
+          border: '1px solid rgba(74, 222, 128, 0.3)',
+          background: 'rgba(74, 222, 128, 0.1)',
+          padding: '5px 12px',
+          color: '#4ade80',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.05em',
+        }}>
+          DEMO MODE
+        </div>
+
         {weather && (
           <div style={{
             display: 'inline-flex',

@@ -51,7 +51,7 @@ export function LandingPage() {
           <a href="#impact" style={{ color: '#D9D9D9', fontSize: '15px', textDecoration: 'none', fontWeight: 400 }}>Impact</a>
           <a href="#about" style={{ color: '#D9D9D9', fontSize: '15px', textDecoration: 'none', fontWeight: 400 }}>About</a>
           <button 
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/dashboard')}
             style={{
               background: 'linear-gradient(135deg, #FF9E00 0%, #C77DFF 100%)',
               color: '#FFFFFF',
@@ -147,7 +147,7 @@ export function LandingPage() {
           
           <div style={{ display: 'flex', gap: '20px', marginTop: '48px' }}>
             <button 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/dashboard')}
               style={{
                 background: 'linear-gradient(135deg, #FF9E00 0%, #C77DFF 100%)',
                 color: '#FFFFFF',

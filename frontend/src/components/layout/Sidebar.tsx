@@ -3,12 +3,12 @@ import { NavLink } from 'react-router-dom'
 import { BarChart3, LayoutDashboard, Map, FileText, Users, Truck } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Needs Map', path: '/map', icon: Map },
-  { name: 'Reports', path: '/reports', icon: FileText },
-  { name: 'Volunteers', path: '/volunteers', icon: Users },
-  { name: 'Dispatch', path: '/dispatch', icon: Truck },
-  { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Needs Map', path: '/dashboard/map', icon: Map },
+  { name: 'Reports', path: '/dashboard/reports', icon: FileText },
+  { name: 'Volunteers', path: '/dashboard/volunteers', icon: Users },
+  { name: 'Dispatch', path: '/dashboard/dispatch', icon: Truck },
+  { name: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
 ]
 
 export function Sidebar() {
