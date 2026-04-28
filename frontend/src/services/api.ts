@@ -8,6 +8,9 @@ export const api = axios.create({
   }
 })
 
+// Log the actual API URL being used
+console.log('🌐 API BASE URL SET TO:', import.meta.env.VITE_API_BASE_URL || '/api/v1')
+
 // Request interceptor to add JWT token
 api.interceptors.request.use((config) => {
   console.log('🌐 API REQUEST:', config.method?.toUpperCase(), config.url)
