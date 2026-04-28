@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { authApi } from '../services/auth'
 
 export function Register() {
   const navigate = useNavigate()
@@ -14,6 +15,7 @@ export function Register() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [healthStatus, setHealthStatus] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,6 +37,16 @@ export function Register() {
       ...prev,
       [e.target.name]: e.target.value
     }))
+  }
+
+  const handleHealthCheck = async () => {
+    setHealthStatus('Checking...')
+    try {
+      await authApi.healthCheck()
+      setHealthStatus('✅ Backend is reachable')
+    } catch (error: any) {
+      setHealthStatus(`❌ Backend error: ${error.message}`)
+    }
   }
 
   return (
@@ -208,6 +220,20 @@ export function Register() {
               </div>
             )}
 
+            {healthStatus && (
+              <div style={{
+                padding: '12px',
+                background: healthStatus.includes('✅') ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+                border: healthStatus.includes('✅') ? '1px solid rgba(74, 222, 128, 0.3)' : '1px solid rgba(248, 113, 113, 0.3)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: healthStatus.includes('✅') ? '#4ade80' : '#f87171',
+                marginBottom: '20px'
+              }}>
+                {healthStatus}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isLoading}
@@ -225,6 +251,24 @@ export function Register() {
               }}
             >
               {isLoading ? 'Creating account...' : 'Create Account'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleHealthCheck}
+              style={{
+                width: '100%',
+                height: '40px',
+                background: 'transparent',
+                color: 'rgba(255,255,255,0.6)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                marginTop: '12px'
+              }}
+            >
+              🏥 Test Backend Connection
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '24px' }}>

@@ -10,23 +10,41 @@ export const api = axios.create({
 
 // Request interceptor to add JWT token
 api.interceptors.request.use((config) => {
+  console.log('🌐 API REQUEST:', config.method?.toUpperCase(), config.url)
+  console.log('🌐 BASE URL:', config.baseURL)
+  console.log('🌐 HEADERS:', config.headers)
+  
   const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+    console.log('🌐 TOKEN ADDED TO REQUEST')
+  } else {
+    console.log('🌐 NO TOKEN FOUND')
   }
+  
   return config
 })
 
 // Response interceptor to handle auth errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('🌐 API RESPONSE:', response.status, response.config.url)
+    return response
+  },
   (error) => {
+    console.error('🌐 API ERROR:', error)
+    console.error('🌐 ERROR STATUS:', error.response?.status)
+    console.error('🌐 ERROR URL:', error.config?.url)
+    console.error('🌐 ERROR DATA:', error.response?.data)
+    
     if (error.response?.status === 401) {
+      console.log('🌐 401 ERROR - LOGGING OUT')
       // Token expired or invalid - logout user
       localStorage.removeItem('token')
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }
+    
     return Promise.reject(error)
   }
 )

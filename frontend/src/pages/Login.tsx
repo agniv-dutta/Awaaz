@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Badge } from '../components/ui/Badge'
+import { authApi } from '../services/auth'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ export function Login() {
   const [error, setError] = useState('')
   const [isHoverNGO, setIsHoverNGO] = useState(false)
   const [isHoverField, setIsHoverField] = useState(false)
+  const [healthStatus, setHealthStatus] = useState('')
   const { login } = useAuthStore()
   const navigate = useNavigate()
 
@@ -38,6 +40,16 @@ export function Login() {
       fillDemoCredentials('admin@awaaz.dev', 'awaaz123')
     } else {
       fillDemoCredentials('volunteer@awaaz.dev', 'awaaz123')
+    }
+  }
+
+  const handleHealthCheck = async () => {
+    setHealthStatus('Checking...')
+    try {
+      await authApi.healthCheck()
+      setHealthStatus('✅ Backend is reachable')
+    } catch (error: any) {
+      setHealthStatus(`❌ Backend error: ${error.message}`)
     }
   }
 
@@ -135,6 +147,19 @@ export function Login() {
               </div>
             )}
 
+            {healthStatus && (
+              <div style={{
+                padding: '12px',
+                background: healthStatus.includes('✅') ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+                border: healthStatus.includes('✅') ? '1px solid rgba(74, 222, 128, 0.3)' : '1px solid rgba(248, 113, 113, 0.3)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: healthStatus.includes('✅') ? '#4ade80' : '#f87171'
+              }}>
+                {healthStatus}
+              </div>
+            )}
+
             <button
               type="submit"
               className="btn-primary-hover"
@@ -147,6 +172,19 @@ export function Login() {
               }}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleHealthCheck}
+              style={{
+                width: '100%', height: '40px', background: 'transparent', 
+                color: 'rgba(255,255,255,0.6)', borderRadius: '8px', fontSize: '12px', 
+                border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', 
+                marginTop: '12px'
+              }}
+            >
+              🏥 Test Backend Connection
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
