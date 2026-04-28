@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('token', access_token)
       set({ token: access_token, user, isLoading: false })
       console.log('LOGIN SUCCESS:', user.email)
-    } catch (error) {
+    } catch (error: any) {
       console.error('LOGIN ERROR:', error?.response?.data || error)
       set({ isLoading: false })
       throw error
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('token', access_token)
       set({ token: access_token, user, isLoading: false })
       console.log('REGISTER SUCCESS:', user.email)
-    } catch (error) {
+    } catch (error: any) {
       console.error('REGISTER ERROR:', error?.response?.data || error)
       set({ isLoading: false })
       throw error
