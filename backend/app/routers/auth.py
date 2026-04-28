@@ -6,16 +6,26 @@ from app.core.security import verify_password, create_access_token
 from app.schemas.auth import UserCreate, UserResponse, Token
 from app.services.auth import create_user, get_user_by_email, get_user_by_id
 from app.dependencies import get_current_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register", response_model=dict)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+    logger.info("REGISTER ATTEMPT: %s", user_in.email)
     user = await get_user_by_email(db, user_in.email)
     if user:
+        logger.warning("EMAIL ALREADY REGISTERED: %s", user_in.email)
         raise HTTPException(status_code=400, detail="Email already registered")
+    
     created_user = await create_user(db, user_in)
+    logger.info("USER CREATED SUCCESSFULLY: %s", created_user.email)
+    
     access_token = create_access_token(data={"sub": str(created_user.id)})
+    logger.info("TOKEN GENERATED FOR USER: %s", created_user.email)
+    
     return {
         "access_token": access_token, 
         "token_type": "bearer",
@@ -32,11 +42,24 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=dict)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+    logger.info("LOGIN ATTEMPT: %s", form_data.username)
     user = await get_user_by_email(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    logger.info("USER FOUND: %s", user is not None)
+    
+    if not user:
+        logger.warning("USER NOT FOUND: %s", form_data.username)
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    password_valid = verify_password(form_data.password, user.hashed_password)
+    logger.info("PASSWORD VALID: %s", password_valid)
+    
+    if not password_valid:
+        logger.warning("INVALID PASSWORD FOR USER: %s", form_data.username)
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
     access_token = create_access_token(data={"sub": str(user.id)})
+    logger.info("TOKEN GENERATED FOR USER: %s", user.email)
+    
     return {
         "access_token": access_token, 
         "token_type": "bearer",

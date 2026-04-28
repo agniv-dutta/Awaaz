@@ -234,7 +234,7 @@ export function Dispatch() {
                 AI Dispatch Advisor
               </span>
               <span style={{ fontSize: '10px', color: 'rgba(199,125,255,0.5)', border: '1px solid rgba(199,125,255,0.25)', borderRadius: '999px', padding: '2px 8px' }}>
-                Powered by Groq
+                Powered by Google Gemini
               </span>
             </div>
             <button

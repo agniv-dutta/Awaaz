@@ -20,11 +20,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true })
     try {
+      console.log('LOGIN ATTEMPT:', email)
       const response = await authApi.login(email, password)
+      console.log('LOGIN RESPONSE:', response)
       const { access_token, user } = response
+      
+      if (!access_token) {
+        throw new Error('No access token received')
+      }
+      
       localStorage.setItem('token', access_token)
       set({ token: access_token, user, isLoading: false })
+      console.log('LOGIN SUCCESS:', user.email)
     } catch (error) {
+      console.error('LOGIN ERROR:', error?.response?.data || error)
       set({ isLoading: false })
       throw error
     }
@@ -33,11 +42,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (name: string, email: string, password: string, role: string, phone: string) => {
     set({ isLoading: true })
     try {
+      console.log('REGISTER ATTEMPT:', email)
       const response = await authApi.register({ name, email, password, role, phone, ward_id: null })
+      console.log('REGISTER RESPONSE:', response)
       const { access_token, user } = response
+      
+      if (!access_token) {
+        throw new Error('No access token received')
+      }
+      
       localStorage.setItem('token', access_token)
       set({ token: access_token, user, isLoading: false })
+      console.log('REGISTER SUCCESS:', user.email)
     } catch (error) {
+      console.error('REGISTER ERROR:', error?.response?.data || error)
       set({ isLoading: false })
       throw error
     }
